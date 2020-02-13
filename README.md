@@ -26,3 +26,8 @@ The system should be created using an Scrum methodology with Test driven develop
 - Unity's Editor UI systems is very rudimentary therefore, the code for the UI system may be hard to manage.
 - Randomly putting together samples to make tracks might not work at all if the music isn't in the same key or time signature,
 users may mistakenly think this to be possible. Even with these two things being the same melodic tracks may not work together well
+
+#Credits
+# Audio Credits
+CC Rock beat - https://freesound.org/people/PlanetroniK/sounds/425556/
+Bassy Explostion - https://freesound.org/people/Dasgoat/sounds/361592/

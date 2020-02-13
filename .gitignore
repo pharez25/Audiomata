@@ -58,3 +58,6 @@ sysinfo.txt
 # Crashlytics generated file
 crashlytics-build.properties
 
+Unity Project/Audiomata/Library/
+Unity Project/Audiomata/Temp/
+Unity Project/Audiomata/obj/

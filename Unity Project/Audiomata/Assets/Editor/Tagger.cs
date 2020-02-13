@@ -1,37 +1,37 @@
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
-using UnityEngine.UIElements;
-using UnityEditor.UIElements;
+using System.Collections.Generic;
 
-
-public class Tagger : EditorWindow
+/// <summary>
+/// Class manages the tagging of Audio Clips
+/// </summary>
+class Tagger
 {
-    [MenuItem("Window/UIElements/Tagger")]
-    public static void ShowExample()
+
+    /// <summary>
+    /// Gets all Audio Clips from within the project
+    /// </summary>
+    /// <returns>an array of all audio clip names from within the project </returns>
+    public string[] GetAllAudio()
     {
-        Tagger wnd = GetWindow<Tagger>();
-        wnd.titleContent = new GUIContent("Tagger");
+        string[] foundAssets = AssetDatabase.FindAssets("t:AudioClip");
+
+        string[] trackNames = new string[foundAssets.Length];
+
+        for (int i = 0; i < trackNames.Length; i++)
+        {
+            string nextClip = AssetDatabase.GUIDToAssetPath(foundAssets[i]);
+            int lastSlash = nextClip.LastIndexOf('/');
+            nextClip = nextClip.Remove(0, lastSlash + 1);
+            int dotIdx = nextClip.LastIndexOf('.');
+            nextClip = nextClip.Remove(dotIdx, nextClip.Length-dotIdx);
+
+            trackNames[i] = nextClip;
+        }
+
+
+        return trackNames;
     }
 
-    public void OnEnable()
-    {
-        // Each editor window contains a root VisualElement object
-        VisualElement root = rootVisualElement;
+ }
 
-        // VisualElements objects can contain other VisualElement following a tree hierarchy.
-        VisualElement label = new Label("Hello World! From C#");
-        root.Add(label);
-
-        // Import UXML
-        var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Tagger.uxml");
-        VisualElement labelFromUXML = visualTree.CloneTree();
-        root.Add(labelFromUXML);
-
-        // A stylesheet can be added to a VisualElement.
-        // The style will be applied to the VisualElement and all of its children.
-        var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/Editor/Main.uss");
-        VisualElement labelWithStyle = new Label("Hello World! With Style");
-        labelWithStyle.styleSheets.Add(styleSheet);
-        root.Add(labelWithStyle);
-    }
-}

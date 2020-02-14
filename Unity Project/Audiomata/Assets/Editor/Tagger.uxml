@@ -1,5 +1,15 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
     <ui:Label text="Audiomata: Track Tagging" class="title" style="height: 30.33333px; width: 851.3333px;">
-        <Style path="Assets/Tagger.uss" />
+        <Style path="Assets/Editor/Main.uss" />
+        <Style path="Assets/Editor/Main.uss" />
     </ui:Label>
+    <ui:VisualElement class="side" style="width: 842px; height: 491.3333px; align-items: flex-start; flex-direction: row-reverse; flex-basis: initial;">
+        <Style path="Assets/Editor/Main.uss" />
+        <Style path="Assets/Editor/Main.uss" />
+        <ui:VisualElement class="side" style="height: 488.3333px; width: 434px; left: 0;" />
+        <ui:VisualElement class="side" style="height: 488.3333px; width: 406.6667px; left: auto; right: 0;">
+            <ui:Label text="Imported Audio Clips" style="height: 20.33334px; width: 390.6667px;" />
+            <ui:ScrollView style="height: 216px; width: 243px;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
 </ui:UXML>

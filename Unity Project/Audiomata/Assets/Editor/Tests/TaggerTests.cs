@@ -8,7 +8,7 @@ public class TaggerTests
     [Test]
     public void TestFindAllAssets()
     {
-        Tagger tagger = new Tagger();
+        TrackTagger tagger = new TrackTagger();
 
         string[] receivedTrackNames = tagger.GetAllAudio();
         for (int i = 0; i < trackNames.Length; i++)

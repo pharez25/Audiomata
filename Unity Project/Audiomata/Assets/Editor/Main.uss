@@ -1,5 +1,13 @@
+.side {
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
 Label {
-    font-size: 20px;
-    -unity-font-style: bold;
-    color: rgb(68, 138, 255);
+    -unity-font: url('Library/unity default resources');
+}
+
+.title {
+    -unity-text-align: upper-center;
+    font-size: 22px;
 }

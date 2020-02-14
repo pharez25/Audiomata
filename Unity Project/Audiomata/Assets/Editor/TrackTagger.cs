@@ -5,14 +5,14 @@ using System.Collections.Generic;
 /// <summary>
 /// Class manages the tagging of Audio Clips
 /// </summary>
-class Tagger
+class TrackTagger
 {
 
     /// <summary>
     /// Gets all Audio Clips from within the project
     /// </summary>
     /// <returns>an array of all audio clip names from within the project </returns>
-    public string[] GetAllAudio()
+    public  string[] GetAllAudio()
     {
         string[] foundAssets = AssetDatabase.FindAssets("t:AudioClip");
 

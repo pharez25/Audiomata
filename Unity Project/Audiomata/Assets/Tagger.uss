@@ -1,8 +1,0 @@
-.title {
-    width: auto;
-    height: auto;
-    font-size: 20px;
-    -unity-font-style: bold;
-    -unity-text-align: upper-center;
-    -unity-font: url('Library/unity default resources');
-}

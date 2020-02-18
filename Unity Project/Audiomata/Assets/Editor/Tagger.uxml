@@ -9,7 +9,7 @@
         <ui:VisualElement class="side" style="height: 488.3333px; width: 434px; left: 0;" />
         <ui:VisualElement class="side" style="height: 488.3333px; width: 406.6667px; left: auto; right: 0;">
             <ui:Label text="Imported Audio Clips" style="height: 20.33334px; width: 390.6667px;" />
-            <ui:ScrollView style="height: 216px; width: 243px;" />
+            <ui:ScrollView style="height: 225.3333px; width: 203px;" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

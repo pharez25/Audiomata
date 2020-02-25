@@ -19,7 +19,6 @@ class TrackTagger
     /// clip name to asset ID
     /// </summary>
     Dictionary<string, string> cliptoGUID;
-    
 
     public TrackTagger()
     {
@@ -68,6 +67,7 @@ class TrackTagger
         if (taggedTracks.TryGetValue(tag, out var trackList))
         {
             trackList.Add(trackName);
+            trackList.Sort();
         }
         else
         {
@@ -77,6 +77,16 @@ class TrackTagger
         }
     }
 
+    public bool UntagTrack(string tag, string trackName)
+    {
+        if(taggedTracks.TryGetValue(tag, out var trackList))
+        {
+           return trackList.Remove(trackName);
+        }
+
+        return false;
+    }
+
    public bool GetTrack(string tag, out string trackName)
     {
         if(!taggedTracks.TryGetValue(tag, out var tracks))
@@ -84,9 +94,33 @@ class TrackTagger
             trackName = null;
             return false;
         }
+        if (tracks.Count > 0)
+        {
+            trackName = tracks[Random.Range(0, tracks.Count - 1)];
+            return true;
+        }
+        else
+        {
+            trackName = null;
+            return false;
+        }
+        
+        
+    }
 
-        trackName = tracks[Random.Range(0, tracks.Count)];
-        return true;
+    public string[] GetTags(string trackName)
+    {
+        List<string> trackTags = new List<string>();
+
+        foreach(var entry in taggedTracks)
+        {
+            if (entry.Value.Contains(trackName))
+            {
+                trackTags.Add(entry.Key);
+            }
+        }
+
+        return trackTags.ToArray();
     }
 
     public void AddTag(string tag)

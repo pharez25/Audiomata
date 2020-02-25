@@ -34,7 +34,7 @@ public class TaggerTests
     
     [TestCase("boom", 0)]
     [TestCase("drums", 1)]
-    public void AddTrackTest(string tag = "test", int trackNameIdx = 0)
+    public void TagTrackTest(string tag = "test", int trackNameIdx = 0)
     {
         TrackTagger tagger = new TrackTagger();
 
@@ -42,8 +42,12 @@ public class TaggerTests
 
         Assert.That(tagger.GetTrack(tag, out var track));
         Assert.That(track, Is.EqualTo(trackNames[trackNameIdx]));
+
+        tagger.UntagTrack(tag, trackNames[trackNameIdx]);
+
+        Assert.That(tagger.GetTrack(tag, out var trackName) == false);
     }
-    
+
     [TestCase("epic dramatic classical")]
     public void AddTagTest(string tagsIn)
     {
@@ -122,5 +126,18 @@ public class TaggerTests
         }
     }
 
-    
+    [TestCase("Bassy Explosion","happy","sad")]
+    public void GetTagsTest(string trackName, string tag1, string tag2)
+    {
+        TrackTagger tagger = new TrackTagger();
+
+        tagger.TagTrack(tag1, trackName);
+        tagger.TagTrack(tag2, trackName);
+
+        string[] outTags = tagger.GetTags(trackName);
+
+        Assert.That(outTags.Length == 2);
+        Assert.That(outTags[0] == tag1 || outTags[0] == tag2);
+        Assert.That(outTags[1] == tag1 || outTags[1] == tag2);
+    }
 }

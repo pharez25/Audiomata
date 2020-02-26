@@ -1,6 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
+using System.IO;
 
 public class TaggerUI : EditorWindow
 {
@@ -8,7 +9,6 @@ public class TaggerUI : EditorWindow
     VisualElement root;
 
     VisualTreeAsset tagElement;
-
 
     int clipSelection = -1;
     string[] clipNames;
@@ -44,6 +44,39 @@ public class TaggerUI : EditorWindow
         RefreshAudioList();
         Button addTag = root.Query<Button>("addTagBtn");
         addTag.clickable.clicked += AddTag;
+
+        Button saveBtn = root.Query<Button>("saveBtn");
+        saveBtn.clickable.clicked += Save;
+
+        Button loadBtn = root.Query<Button>("loadBtn");
+        loadBtn.clickable.clicked += Load;
+    }
+
+    private void Save()
+    {
+        string path =
+        EditorUtility.SaveFilePanel("Save TrackTags", "Assets", "track tags", "json");
+
+        if (!string.IsNullOrEmpty(path))
+        {
+            tagger.SaveAll(path);
+            Debug.Log("Audiomata saved tags sucessfully");
+        }
+        
+    }
+
+    private void Load()
+    {
+        string path = EditorUtility.OpenFilePanel("Load Track Tag JSON", "Assets", "json");
+
+        if (string.IsNullOrEmpty(path))
+        {
+            return;
+        }
+        tagger.Load(path);
+        Debug.Log("Audiomata Loaded tracks sucessfully");
+        RefreshAudioList();
+        RefreshTagList();
     }
 
     private void AddTag()
@@ -68,6 +101,12 @@ public class TaggerUI : EditorWindow
     private void RefreshAudioList()
     {
         ScrollView clipScroll = root.Query<ScrollView>("audioClipScrollView");
+        
+        for (int i = clipScroll.childCount-1; i > -1; i--)
+        {
+            clipScroll.RemoveAt(i);
+        }
+
 
         clipNames = tagger.GetAudioAssets();
 
@@ -142,6 +181,4 @@ public class TaggerUI : EditorWindow
         }
         RefreshTagList();
     }
-
-
 }

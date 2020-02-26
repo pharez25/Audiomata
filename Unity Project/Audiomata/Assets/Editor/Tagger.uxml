@@ -15,6 +15,10 @@
         <ui:VisualElement class="side" style="height: 488.3333px; width: 406.6667px; left: auto; right: 0;">
             <ui:Label text="Imported Audio Clips" style="height: 20.33334px; width: 248.3333px; -unity-text-align: upper-center;" />
             <ui:ScrollView name="audioClipScrollView" style="height: 222px; width: 242px; margin-left: 3px; margin-right: 3px; margin-top: 3px; margin-bottom: 3px; border-left-width: 3px; border-right-width: 3px; border-top-width: 3px; border-bottom-width: 3px; left: 6px; border-color: rgba(0, 0, 0, 0.4);" />
+            <ui:VisualElement style="height: 46.66667px; flex-direction: row;">
+                <ui:Button text="Save" name="saveBtn" style="height: 22.33333px; width: 119px;" />
+                <ui:Button text="Load" name="loadBtn" style="height: 22.33333px; width: 119px;" />
+            </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

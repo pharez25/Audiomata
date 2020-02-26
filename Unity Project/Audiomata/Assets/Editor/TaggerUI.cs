@@ -6,8 +6,13 @@ public class TaggerUI : EditorWindow
 {
     TrackTagger tagger;
     VisualElement root;
+
+    VisualTreeAsset tagElement;
+
+
     int clipSelection = -1;
     string[] clipNames;
+    string[] clipTags;
 
     [MenuItem("Window/Audiomata/Tagger")]
     public static void ShowExample()
@@ -19,23 +24,45 @@ public class TaggerUI : EditorWindow
     public void OnEnable()
     {
         // Each editor window contains a root VisualElement object
-         root = rootVisualElement;
+        root = rootVisualElement;
         tagger = new TrackTagger();
 
         // VisualElements objects can contain other VisualElement following a tree hierarchy.
-       
+
 
         // Import UXML
         VisualTreeAsset visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Tagger.uxml");
-        VisualElement labelFromUXML = visualTree.CloneTree();
-        root.Add(labelFromUXML);
+        VisualElement tagUI = visualTree.CloneTree();
+        root.Add(tagUI);
+
+        tagElement = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Tag.uxml");
 
         // A stylesheet can be added to a VisualElement.
         // The style will be applied to the VisualElement and all of its children.
         StyleSheet styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/Editor/Main.uss");
 
         RefreshAudioList();
-        
+        Button addTag = root.Query<Button>("addTagBtn");
+        addTag.clickable.clicked += AddTag;
+    }
+
+    private void AddTag()
+    {
+        if (clipSelection < 0 || clipSelection >= clipNames.Length)
+        {
+            return;
+        }
+
+        TextField addTagField = root.Query<TextField>("addTagTxtField");
+        string text = addTagField.text;
+
+        if (text.Length < 1 && text != "Tag Name")
+        {
+            return;
+        }
+
+        tagger.TagTrack(text, clipNames[clipSelection]);
+        RefreshTagList();
     }
 
     private void RefreshAudioList()
@@ -56,13 +83,45 @@ public class TaggerUI : EditorWindow
         }
     }
 
+    private void RefreshTagList()
+    {
+        ScrollView tagScroll = root.Query<ScrollView>("tagScrollView");
+
+        for (int i = tagScroll.childCount - 1; i > -1; i--)
+        {
+            tagScroll.RemoveAt(i);
+        }
+
+        clipTags = tagger.GetTags(clipNames[clipSelection]);
+
+        for (int i = 0; i < clipTags.Length; i++)
+        {
+            TemplateContainer nextTagElement = tagElement.CloneTree();
+            Label tagLabel = nextTagElement.Query<Label>("nameLabel");
+            Button xBtn = nextTagElement.Query<Button>("removeBtn");
+            xBtn.clickable.clickedWithEventInfo += RemoveTag;
+
+            tagLabel.text = clipTags[i];
+            tagScroll.Add(nextTagElement);
+        }
+
+    }
+
+    private void RemoveTag(EventBase obj)
+    {
+        Button button = (Button)obj.target;
+        Label label = button.parent.Query<Label>("nameLabel");
+        tagger.UntagTrack(label.text, clipNames[clipSelection]);
+        RefreshTagList();
+    }
+
     private void SetSelectedAudioCLip(EventBase obj)
     {
         Button target = (Button)obj.target;
 
         int newSelection = int.Parse(target.name.Remove(0, 7));
-       
-        if(newSelection == clipSelection)
+
+        if (newSelection == clipSelection)
         {
             target.RemoveFromClassList("clipBtnSelected");
             target.AddToClassList("clipBtnUnselected");
@@ -81,6 +140,7 @@ public class TaggerUI : EditorWindow
             target.AddToClassList("clipBtnSelected");
             clipSelection = newSelection;
         }
+        RefreshTagList();
     }
 
 

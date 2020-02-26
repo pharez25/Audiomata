@@ -1,12 +1,17 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
     <ui:Label text="Audiomata: Track Tagging" class="title" style="height: 30.33333px; width: 851.3333px;">
-        <Style path="Assets/Editor/Main.uss" />
-        <Style path="Assets/Editor/Main.uss" />
+        <Style path="Assets/StyleSheets/Main.uss" />
     </ui:Label>
     <ui:VisualElement class="side" style="width: 842px; height: 491.3333px; align-items: flex-start; flex-direction: row-reverse; flex-basis: initial;">
-        <Style path="Assets/Editor/Main.uss" />
-        <Style path="Assets/Editor/Main.uss" />
-        <ui:VisualElement class="side" style="height: 488.3333px; width: 434px; left: 0;" />
+        <Style path="Assets/StyleSheets/Main.uss" />
+        <ui:VisualElement class="side" style="height: 488.3333px; width: 434px; left: 0;">
+            <ui:Label text="Tags" style="width: 256px; -unity-text-align: upper-center;" />
+            <ui:ScrollView name="tagScrollView" style="height: 228px; width: 260.3333px; border-left-width: 3px; border-right-width: 3px; border-top-width: 3px; border-bottom-width: 3px; border-color: rgba(0, 0, 0, 0.59);" />
+            <ui:VisualElement style="height: 38.33333px; width: 426.3333px; flex-direction: row;">
+                <ui:TextField value="filler text" text="Tag Name" name="addTagTxtField" max-length="50" style="height: 27.66667px; width: 160px;" />
+                <ui:Button text="Add" name="addTagBtn" style="height: 24px; width: 96.66667px;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
         <ui:VisualElement class="side" style="height: 488.3333px; width: 406.6667px; left: auto; right: 0;">
             <ui:Label text="Imported Audio Clips" style="height: 20.33334px; width: 248.3333px; -unity-text-align: upper-center;" />
             <ui:ScrollView name="audioClipScrollView" style="height: 222px; width: 242px; margin-left: 3px; margin-right: 3px; margin-top: 3px; margin-bottom: 3px; border-left-width: 3px; border-right-width: 3px; border-top-width: 3px; border-bottom-width: 3px; left: 6px; border-color: rgba(0, 0, 0, 0.4);" />

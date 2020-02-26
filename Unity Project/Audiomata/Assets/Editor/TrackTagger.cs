@@ -66,8 +66,11 @@ class TrackTagger
     {
         if (taggedTracks.TryGetValue(tag, out var trackList))
         {
-            trackList.Add(trackName);
-            trackList.Sort();
+            if (!trackList.Contains(trackName))
+            {
+                trackList.Add(trackName);
+                trackList.Sort();
+            }
         }
         else
         {
@@ -119,7 +122,7 @@ class TrackTagger
                 trackTags.Add(entry.Key);
             }
         }
-
+        trackTags.Sort();
         return trackTags.ToArray();
     }
 

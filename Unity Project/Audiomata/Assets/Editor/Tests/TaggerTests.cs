@@ -1,5 +1,4 @@
 ﻿using NUnit.Framework;
-using System.Collections;
 using System.IO;
 using UnityEngine;
 //
@@ -9,7 +8,7 @@ public class TaggerTests
     string[] trackNames = { "Bassy Explosion", "CC Rock Beat" };
 
     [Test]
-    public void TestFindAllAssets()
+    public void FindAllAssetsTest()
     {
         TrackTagger tagger = new TrackTagger();
 

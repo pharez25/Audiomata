@@ -8,17 +8,17 @@ using Newtonsoft.Json.Linq;
 /// <summary>
 /// Class manages the tagging of Audio Clips
 /// </summary>
-class TrackTagger
+public class TrackTagger
 {
     /// <summary>
     /// Dictionary of all tags against tracks
     /// </summary>
-    Dictionary<string, List<string>> taggedTracks;
+    private Dictionary<string, List<string>> taggedTracks;
 
     /// <summary>
     /// clip name to asset ID
     /// </summary>
-    Dictionary<string, string> cliptoGUID;
+    private Dictionary<string, string> cliptoGUID;
 
     public TrackTagger()
     {
@@ -170,6 +170,7 @@ class TrackTagger
         try
         {
             File.WriteAllText(path, JsonConvert.SerializeObject(trackData));
+            Debug.Log("Audiomata: Saved Sucessfully");
         }
         catch (IOException e)
         {
@@ -187,6 +188,7 @@ class TrackTagger
         try
         {
              data = File.ReadAllText(path);
+            Debug.Log("Audiomata Loaded Sucessfully");
         }
         catch(IOException e)
         {

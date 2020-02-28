@@ -31,15 +31,15 @@ public class TaggerUI : EditorWindow
 
 
         // Import UXML
-        VisualTreeAsset visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Tagger.uxml");
+        VisualTreeAsset visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/UI/Tagger.uxml");
         VisualElement tagUI = visualTree.CloneTree();
         root.Add(tagUI);
 
-        tagElement = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Tag.uxml");
+        tagElement = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/UI/Tag.uxml");
 
         // A stylesheet can be added to a VisualElement.
         // The style will be applied to the VisualElement and all of its children.
-        StyleSheet styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/Editor/Main.uss");
+        StyleSheet styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/Editor/UI/Main.uss");
 
         RefreshAudioList();
         Button addTag = root.Query<Button>("addTagBtn");
@@ -60,9 +60,7 @@ public class TaggerUI : EditorWindow
         if (!string.IsNullOrEmpty(path))
         {
             tagger.SaveAll(path);
-            Debug.Log("Audiomata saved tags sucessfully");
         }
-        
     }
 
     private void Load()
@@ -74,7 +72,6 @@ public class TaggerUI : EditorWindow
             return;
         }
         tagger.Load(path);
-        Debug.Log("Audiomata Loaded tracks sucessfully");
         RefreshAudioList();
         RefreshTagList();
     }

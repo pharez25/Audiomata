@@ -1,6 +1,7 @@
 ﻿using NUnit.Framework;
 using System.IO;
 using UnityEngine;
+
 //
 [TestFixture]
 public class TaggerTests
@@ -12,85 +13,51 @@ public class TaggerTests
     {
         TrackTagger tagger = new TrackTagger();
 
-        string[] receivedTrackNames = tagger.GetAudioAssets();
-        for (int i = 0; i < trackNames.Length; i++)
-        {
-            Assert.That(receivedTrackNames, Has.Exactly(1).EqualTo(trackNames[i]));
-        }
-    }
+        Track[] receivedTrackNames = tagger.GetAudioAssets();
 
-    [Test]
-    public void ActiveTracksTest()
-    {
-        TrackTagger tagger = new TrackTagger();
-        string[] receivedTracks = tagger.GetActiveTrackNames();
         for (int i = 0; i < trackNames.Length; i++)
         {
-            Assert.That(receivedTracks, Has.Exactly(1).EqualTo(trackNames[i]));
+            bool wasFound = false;
+            for (int j = 0; j < receivedTrackNames.Length; j++)
+            {
+                if(receivedTrackNames[j].name == trackNames[i])
+                {
+                    wasFound = true;
+                    break;
+                }
+            }
+            Assert.That(wasFound);
         }
+
     }
 
     
-    [TestCase("boom", 0)]
-    [TestCase("drums", 1)]
-    public void TagTrackTest(string tag = "test", int trackNameIdx = 0)
+    [TestCase("boom")]
+    [TestCase("drums")]
+    public void TagTrackTest(string tag = "test")
     {
         TrackTagger tagger = new TrackTagger();
+        Track[] tracks = tagger.GetAudioAssets();
 
-        tagger.TagTrack(tag, trackNames[trackNameIdx]);
+        int idxToTag = Random.Range(0, tracks.Length - 1);
 
-        Assert.That(tagger.GetTrack(tag, out var track));
-        Assert.That(track, Is.EqualTo(trackNames[trackNameIdx]));
+        tagger.TagTrack(tracks[idxToTag].guid, tag);
 
-        tagger.UntagTrack(tag, trackNames[trackNameIdx]);
+        Assert.That(tagger.GetRandomTrack(tag, out var track));
+        Assert.That(track.Equals(tracks[idxToTag]));
 
-        Assert.That(tagger.GetTrack(tag, out var trackName) == false);
+        tagger.UntagTrack(tracks[idxToTag].guid, tag);
+
+        Assert.That(tagger.GetRandomTrack(tag, out var trackName) == false);
     }
-
-    [TestCase("epic dramatic classical")]
-    public void AddTagTest(string tagsIn)
-    {
-        TrackTagger tagger = new TrackTagger();
-    string[] tags = tagsIn.Split(' ');
-
-        for (int i = 0; i < tags.Length; i++)
-        {
-            tagger.AddTag(tags[i]);
-        }
-
-        string[] resultTags = tagger.GetAllTags();
-
-        Assert.That(resultTags.Length == tags.Length);
-
-        for (int i = 0; i < resultTags.Length; i++)
-        {
-            Assert.That(resultTags, Has.Exactly(1).EqualTo(tags[i]));
-        }
-    }
-
-    [TestCase("epic dramatic classical")]
-    public void RemoveTag(string tagsIn)
-    {
-        TrackTagger tagger = new TrackTagger();
-
-        string[] tags = tagsIn.Split(' ');
-
-        for (int i = 0; i < tags.Length; i++)
-        {
-            tagger.AddTag(tags[i]);
-            tagger.RemoveTag(tags[i]);
-        }
-        tagger.RemoveTag("Fake Tag");
-
-        Assert.That(tagger.GetAllTags().Length == 0);
-    }
-    
+   
     [TestCase("test.json")]
-    public void SaveLoadTest(string fileName)
+    public void SaveLoadTest(string pathFromApp,int randTagCount =5)
     {
         TrackTagger tagger = new TrackTagger();
+        Track[] tracks = tagger.GetAudioAssets();
 
-        string path = Application.dataPath + "\\" + fileName;
+        string path = Application.dataPath + "\\" + pathFromApp;
         string[] tags = { "great", "emotional", "loud", "classical" };
 
         if (File.Exists(path))
@@ -98,12 +65,16 @@ public class TaggerTests
             File.Delete(path);
         }
 
-        tagger.TagTrack(tags[0], trackNames[0]);
-        tagger.TagTrack(tags[1], trackNames[0]);
-        tagger.TagTrack(tags[2], trackNames[0]);
-        tagger.TagTrack(tags[2], trackNames[1]);
-        tagger.TagTrack(tags[3], trackNames[1]);
-        tagger.TagTrack(tags[1], trackNames[1]);
+        int[,] trackTagIdxs = new int[2, randTagCount];
+
+        for (int i = 0; i < randTagCount; i++)
+        {
+            int nextTagIdx = Random.Range(0, tags.Length - 1);
+            int nexTrackIdx= Random.Range(0, tracks.Length- 1);
+            tagger.TagTrack(tracks[nexTrackIdx].guid, tags[nextTagIdx]);
+            trackTagIdxs[0, i] = nexTrackIdx;
+            trackTagIdxs[1, i] = nextTagIdx;
+        }
 
         tagger.SaveAll(path);
 
@@ -111,29 +82,25 @@ public class TaggerTests
 
         tagger.Load(path);
 
-        string[] resultTags = tagger.GetAllTags();
-        string[] resultTracks = tagger.GetActiveTrackNames();
-
-        for (int i = 0; i < resultTags.Length; i++)
+        for (int i = 0; i < randTagCount; i++)
         {
-            Assert.That(resultTags, Has.Exactly(1).EqualTo(tags[i]));
-        }
-
-        for (int i = 0; i < resultTracks.Length; i++)
-        {
-            Assert.That(resultTracks, Has.Exactly(1).EqualTo(trackNames[i]));
+            Track[] nextTracks = tagger.GetTracksTaggedAs(tags[trackTagIdxs[1, i]]);
+            CollectionAssert.Contains(nextTracks, tracks[trackTagIdxs[0, i]]);
         }
     }
 
-    [TestCase("Bassy Explosion","happy","sad")]
-    public void GetTagsTest(string trackName, string tag1, string tag2)
+    [TestCase("happy","sad")]
+    public void GetTagsTest(string tag1, string tag2)
     {
         TrackTagger tagger = new TrackTagger();
+        Track[] tracks = tagger.GetAudioAssets();
+        int idx = Random.Range(0, tracks.Length - 1);
+        Track selTrack = tracks[idx];
 
-        tagger.TagTrack(tag1, trackName);
-        tagger.TagTrack(tag2, trackName);
+        tagger.TagTrack(selTrack.guid, tag1);
+        tagger.TagTrack(selTrack.guid, tag2);
 
-        string[] outTags = tagger.GetTags(trackName);
+        string[] outTags = tagger.GetTags(selTrack.guid);
 
         Assert.That(outTags.Length == 2);
         Assert.That(outTags[0] == tag1 || outTags[0] == tag2);

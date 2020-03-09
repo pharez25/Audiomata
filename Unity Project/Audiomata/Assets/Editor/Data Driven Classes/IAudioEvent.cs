@@ -52,7 +52,7 @@ public interface IAudioEvent
 }
 
 /// <summary>
-/// The of an Audiomata audio event
+/// The current status of an Audiomata audio event
 /// </summary>
 public enum AudioEventStatus
 {

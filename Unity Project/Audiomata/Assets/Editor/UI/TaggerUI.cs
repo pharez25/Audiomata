@@ -1,7 +1,6 @@
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
-using System.IO;
 
 public class TaggerUI : EditorWindow
 {
@@ -11,7 +10,7 @@ public class TaggerUI : EditorWindow
     VisualTreeAsset tagElement;
 
     int clipSelection = -1;
-    string[] clipNames;
+    Track[] clips;
     string[] clipTags;
 
     [MenuItem("Window/Audiomata/Tagger")]
@@ -78,7 +77,7 @@ public class TaggerUI : EditorWindow
 
     private void AddTag()
     {
-        if (clipSelection < 0 || clipSelection >= clipNames.Length)
+        if (clipSelection < 0 || clipSelection >= clips.Length)
         {
             return;
         }
@@ -91,7 +90,7 @@ public class TaggerUI : EditorWindow
             return;
         }
 
-        tagger.TagTrack(text, clipNames[clipSelection]);
+        tagger.TagTrack(text, clips[clipSelection].guid);
         RefreshTagList();
     }
 
@@ -105,16 +104,17 @@ public class TaggerUI : EditorWindow
         }
 
 
-        clipNames = tagger.GetAudioAssets();
+        clips = tagger.GetAudioAssets();
 
-        for (int i = 0; i < clipNames.Length; i++)
+        for (int i = 0; i < clips.Length; i++)
         {
             Button clipSelector = new Button();
             clipSelector.AddToClassList((i != clipSelection) ? "clipBtnUnselected" : "clipBtnSelected");
             clipSelector.name = "clipBtn" + i;
             clipSelector.clickable.clickedWithEventInfo += SetSelectedAudioCLip;
 
-            clipSelector.text = clipNames[i];
+            clipSelector.text = clips[i].name;
+            clipSelector.tooltip = clips[i].path;
             clipScroll.Add(clipSelector);
         }
     }
@@ -128,7 +128,7 @@ public class TaggerUI : EditorWindow
             tagScroll.RemoveAt(i);
         }
 
-        clipTags = tagger.GetTags(clipNames[clipSelection]);
+        clipTags = tagger.GetTags(clips[clipSelection].guid);
 
         for (int i = 0; i < clipTags.Length; i++)
         {
@@ -147,7 +147,7 @@ public class TaggerUI : EditorWindow
     {
         Button button = (Button)obj.target;
         Label label = button.parent.Query<Label>("nameLabel");
-        tagger.UntagTrack(label.text, clipNames[clipSelection]);
+        tagger.UntagTrack(clips[clipSelection].guid, label.text);
         RefreshTagList();
     }
 

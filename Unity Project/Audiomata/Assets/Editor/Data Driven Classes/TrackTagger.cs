@@ -1,9 +1,7 @@
-﻿using UnityEditor;
-using UnityEngine;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using UnityEditor;
+using UnityEngine;
 
 /// <summary>
 /// Class manages the tagging of Audio Clips
@@ -11,170 +9,155 @@ using Newtonsoft.Json.Linq;
 public class TrackTagger
 {
     /// <summary>
-    /// Dictionary of all tags against tracks
+    /// Dictionary of guids against a list of their tags
     /// </summary>
-    private Dictionary<string, List<string>> taggedTracks;
+    private Dictionary<string, List<string>> trackTagDict;
 
     /// <summary>
-    /// clip name to asset ID
+    /// clipId to info
     /// </summary>
-    private Dictionary<string, string> cliptoGUID;
+    private Dictionary<string, Track> assetDict;
 
     public TrackTagger()
     {
-        taggedTracks = new Dictionary<string, List<string>>();
-        cliptoGUID = new Dictionary<string, string>();
-        GetAudioAssets();
+        trackTagDict = new Dictionary<string, List<string>>();
+        assetDict = new Dictionary<string, Track>();
+        GetAudioAssets(true);
     }
 
     /// <summary>
     /// Gets all Audio Clips from within the project updates dictionary of tracks where appropriate
     /// </summary>
+    /// <param name="refresh">If false returns cached copy of all tracks within the class</param>
     /// <returns>an array of all audio clip names from within the project </returns>
-    public  string[] GetAudioAssets()
+    public Track[] GetAudioAssets(bool refresh = false)
     {
+        if (!refresh)
+        {
+            Track[] allTracks = new Track[assetDict.Count];
+            assetDict.Values.CopyTo(allTracks, 0);
+            return allTracks;
+        }
+
         string[] foundAssets = AssetDatabase.FindAssets("t:AudioClip");
 
-        string[] trackNames = new string[foundAssets.Length];
+        Track[] trackNames = new Track[foundAssets.Length];
 
         for (int i = 0; i < trackNames.Length; i++)
         {
-            string nextClip = AssetDatabase.GUIDToAssetPath(foundAssets[i]);
-            int lastSlash = nextClip.LastIndexOf('/');
-            nextClip = nextClip.Remove(0, lastSlash + 1);
-            int dotIdx = nextClip.LastIndexOf('.');
-            nextClip = nextClip.Remove(dotIdx, nextClip.Length-dotIdx);
+            Track nextTrack;
+            nextTrack.guid = foundAssets[i];
+            nextTrack.path = AssetDatabase.GUIDToAssetPath(nextTrack.guid);
+            nextTrack.name = Path.GetFileNameWithoutExtension(nextTrack.path);
+            trackNames[i] = nextTrack;
 
-            trackNames[i] = nextClip;
-            if (!cliptoGUID.ContainsKey(nextClip))
+            if (!assetDict.ContainsKey(nextTrack.guid))
             {
-                cliptoGUID.Add(nextClip, foundAssets[i]);
+                assetDict.Add(nextTrack.guid, nextTrack);
             }
-            
         }
         return trackNames;
     }
 
-    public string[] GetActiveTrackNames()
-    {
-        string[] tracks = new string[cliptoGUID.Count];
-        cliptoGUID.Keys.CopyTo(tracks, 0);
-        return tracks;
-    }
+    public bool TrackIsLoaded(string guid) => assetDict.ContainsKey(guid);
 
-    public void TagTrack(string tag, string trackName)
-    {
-        if (taggedTracks.TryGetValue(tag, out var trackList))
+    public void TagTrack(string guid, string tag)
+    { 
+       if(trackTagDict.TryGetValue(guid, out var tags))
         {
-            if (!trackList.Contains(trackName))
+            if (!tags.Contains(tag))
             {
-                trackList.Add(trackName);
-                trackList.Sort();
+                tags.Add(tag);
+                tags.Sort();
             }
         }
         else
         {
-            trackList = new List<string>();
-            trackList.Add(trackName);
-            taggedTracks.Add(tag, trackList);
+            tags = new List<string>();
+            tags.Add(tag);
+            trackTagDict.Add(guid, tags);
         }
     }
+    public void TagTrack(Track track, string tag) => TagTrack(track.guid, tag);
 
-    public bool UntagTrack(string tag, string trackName)
+    public bool UntagTrack(string guid, string tag)
     {
-        if(taggedTracks.TryGetValue(tag, out var trackList))
+        if (trackTagDict.TryGetValue(guid, out var tagList))
         {
-           return trackList.Remove(trackName);
+            return tagList.Remove(tag);
         }
-
         return false;
     }
 
-   public bool GetTrack(string tag, out string trackName)
+    public bool GetRandomTrack(string tag, out Track track)
     {
-        if(!taggedTracks.TryGetValue(tag, out var tracks))
-        {
-            trackName = null;
-            return false;
-        }
-        if (tracks.Count > 0)
-        {
-            trackName = tracks[Random.Range(0, tracks.Count - 1)];
-            return true;
-        }
-        else
-        {
-            trackName = null;
-            return false;
-        }
-        
-        
-    }
+        track = new Track();
+        List<string> tracksAsTagged = new List<string>();
 
-    public string[] GetTags(string trackName)
-    {
-        List<string> trackTags = new List<string>();
-
-        foreach(var entry in taggedTracks)
+        foreach(var keyValuePair in trackTagDict)
         {
-            if (entry.Value.Contains(trackName))
+            if (keyValuePair.Value.Contains(tag))
             {
-                trackTags.Add(entry.Key);
+                tracksAsTagged.Add(keyValuePair.Key);
             }
         }
-        trackTags.Sort();
-        return trackTags.ToArray();
-    }
 
-    public void AddTag(string tag)
-    {
-        if (!taggedTracks.ContainsKey(tag))
+        if (tracksAsTagged.Count < 1)
         {
-            taggedTracks.Add(tag, new List<string>());
-        }
-    }
-
-    public void RemoveTag(string tag)
-    {
-        taggedTracks.Remove(tag);
-    }
-
-   public string[] GetAllTags()
-    {
-        string[] tags = new string[taggedTracks.Count];
-        taggedTracks.Keys.CopyTo(tags, 0);
-
-        return tags;
-    }
-
-    public void SaveAll(string path)
-    {
-        List<TaggedTrack> trackData  = new List<TaggedTrack>();
-
-        foreach (var clip in cliptoGUID)
-        {
-            trackData.Add(new TaggedTrack() { name = clip.Key,tags= new List<string>() });
+            return false;
         }
 
-        foreach(var entry in taggedTracks)
+        string trackId = tracksAsTagged[Random.Range(0, tracksAsTagged.Count - 1)];
+        track = assetDict[trackId];
+        return true;
+    }
+
+    public string[] GetTags(string trackGuid) => trackTagDict[trackGuid].ToArray();
+
+    public string[] GetAllTags()
+    {
+        List<string> tags = new List<string>();
+
+        foreach (var kvp in trackTagDict)
         {
-            for (int i = 0; i < trackData.Count; i++)
+            List<string> tagSet = kvp.Value;
+
+            for (int i = 0; i < tagSet.Count; i++)
             {
-                if (entry.Value.Contains(trackData[i].name))
+                string next = tagSet[i];
+                if (!tags.Contains(next))
                 {
-                    trackData[i].tags.Add(entry.Key);
+                    tags.Add(next);
                 }
             }
         }
 
+        return tags.ToArray();
+    }
+
+    public void SaveAll(string path)
+    {
+        TagData fileData;
+        fileData.taggedTracks = new TaggedTrack[trackTagDict.Count];
+
+        int i = 0;
+        foreach (var kvp in trackTagDict)
+        {
+            TaggedTrack next;
+            next.tags = kvp.Value.ToArray();
+            next.track = assetDict[kvp.Key];
+            fileData.taggedTracks[i] = next;
+            i++;   
+        }
+
         try
         {
-            File.WriteAllText(path, JsonConvert.SerializeObject(trackData));
-            Debug.Log("Audiomata: Saved Sucessfully");
+            File.WriteAllText(path, JsonUtility.ToJson(fileData));
+            Debug.Log("Audiomata:Saved Sucessfully");
         }
         catch (IOException e)
         {
-            Debug.Log("Audiomata: Failed To Save Tags: "+e.Message);
+            Debug.Log("Audiomata:Failed to save - "+e.Message);
         }
     }
 
@@ -182,49 +165,90 @@ public class TrackTagger
     {
         if (clearAll)
         {
-            taggedTracks.Clear();
+            trackTagDict.Clear();
+            assetDict.Clear();
+            GetAudioAssets(true);
         }
-        string data;
+
+        string fileData;
         try
         {
-             data = File.ReadAllText(path);
-            Debug.Log("Audiomata Loaded Sucessfully");
+            fileData = File.ReadAllText(path);
+            
         }
-        catch(IOException e)
+        catch (IOException e)
         {
             Debug.Log("Audiomata: Failed to load Tag file: " + e.Message);
             return;
         }
-        
 
-       JArray arr = JArray.Parse(data);
-        for (int i = 0; i < arr.Count; i++)
+        TaggedTrack[] trackTagArr = JsonUtility.FromJson<TagData>(fileData).taggedTracks;
+
+        for (int i = 0; i < trackTagArr.Length; i++)
         {
-            TaggedTrack next = JsonConvert.DeserializeObject<TaggedTrack>(arr[i].ToString());
+            TaggedTrack next = trackTagArr[i];
 
-
-            for (int j = 0; j < next.tags.Count; j++)
+            if (!assetDict.ContainsKey(next.track.guid))
             {
-                string nextTag = next.tags[j];
-                if (!taggedTracks.ContainsKey(nextTag))
-                {
-                    List<string> trackNames = new List<string>();
-                    trackNames.Add(next.name);
-                    taggedTracks.Add(nextTag, trackNames);
-                }
-                else
-                {
-                    taggedTracks[nextTag].Add(next.name);
-                }
-                
+                Debug.LogError("Audiomata: Asset Not Found: " + next.track.path);
+                continue;
+            }
+
+            List<string> tags = new List<string>();
+
+            tags.AddRange(next.tags);
+
+            trackTagDict.Add(next.track.guid, tags);
+            
+        }
+
+        Debug.Log("Audiomata Loaded Sucessfully");
+    }
+
+    public Track[] GetTracksTaggedAs(string tag)
+    {
+        List<Track> tracks = new List<Track>();
+
+        foreach (var kvp in trackTagDict)
+        {
+            if (kvp.Value.Contains(tag))
+            {
+                tracks.Add(assetDict[kvp.Key]);
             }
         }
+        return tracks.ToArray();
     }
- }
+}
 
+[System.Serializable]
+public struct TagData
+{
+    public TaggedTrack[] taggedTracks;
+}
+
+[System.Serializable]
+public struct Track
+{
+    public string name;
+    public string path;
+    public string guid;
+
+    public override bool Equals(object obj)
+    {
+        if(obj.GetType() != typeof(Track))
+        {
+            return false;
+        }
+        Track t = (Track)obj;
+
+        return (t.name == name && t.path == path && guid == t.guid);
+    }
+}
+
+[System.Serializable]
 public struct TaggedTrack
 {
-   public string name;
-    public List<string> tags;
+    public Track track;
+    public string[] tags;
 }
 

@@ -10,7 +10,7 @@ public class AudioEventCreator
 
     public AudioEventCreator(TrackTagger activeTagger)
     {
-        activeTrackTagger = activeTagger ?? throw new Exception("TrackTagger cannot be null");
+        activeTrackTagger = activeTagger;
     }
 
    

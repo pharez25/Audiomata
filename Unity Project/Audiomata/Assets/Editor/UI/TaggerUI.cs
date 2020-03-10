@@ -81,7 +81,7 @@ public class TaggerUI : EditorWindow
         {
             return;
         }
-
+        
         TextField addTagField = root.Query<TextField>("addTagTxtField");
         string text = addTagField.text;
 
@@ -121,6 +121,11 @@ public class TaggerUI : EditorWindow
 
     private void RefreshTagList()
     {
+        if(clipSelection<0 || clipSelection>= clips.Length)
+        {
+            return;
+        }
+
         ScrollView tagScroll = root.Query<ScrollView>("tagScrollView");
 
         for (int i = tagScroll.childCount - 1; i > -1; i--)
@@ -129,6 +134,11 @@ public class TaggerUI : EditorWindow
         }
 
         clipTags = tagger.GetTags(clips[clipSelection].guid);
+
+        if (clipTags == null)
+        {
+            return;
+        }
 
         for (int i = 0; i < clipTags.Length; i++)
         {

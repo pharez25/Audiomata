@@ -112,7 +112,17 @@ public class TrackTagger
         return true;
     }
 
-    public string[] GetTags(string trackGuid) => trackTagDict[trackGuid].ToArray();
+    public string[] GetTags(string trackGuid)
+    {
+        if (trackTagDict.TryGetValue(trackGuid, out var tags))
+        {
+            return tags.ToArray();
+        }
+        else
+        {
+            return null;
+        }
+    }
 
     public string[] GetAllTags()
     {

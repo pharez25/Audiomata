@@ -236,6 +236,7 @@ public struct TagData
     public TaggedTrack[] taggedTracks;
 }
 
+//TODO move this to it's own file
 [System.Serializable]
 public struct Track
 {

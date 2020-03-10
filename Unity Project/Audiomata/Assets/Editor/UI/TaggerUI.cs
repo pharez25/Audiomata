@@ -90,7 +90,7 @@ public class TaggerUI : EditorWindow
             return;
         }
 
-        tagger.TagTrack(text, clips[clipSelection].guid);
+        tagger.TagTrack(clips[clipSelection].guid,text);
         RefreshTagList();
     }
 

@@ -1,7 +1,7 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
     <ui:VisualElement class="tagElement" style="height: 23px; width: 216.5px; flex-direction: row; border-color: rgba(0, 0, 0, 0.4); border-left-width: 2px; border-right-width: 2px; border-top-width: 2px; border-bottom-width: 2px;">
         <Style path="Assets/Editor/Tag.uss" />
-        <ui:Label text="Label" name="nameLabel" style="-unity-text-align: upper-center; -unity-font: url('Library/unity default resources'); font-size: 12px; width: 194.4286px; flex-direction: row-reverse; height: 15px;" />
+        <ui:Label text="Label" name="nameLabel" style="-unity-text-align: upper-center;  font-size: 12px; width: 194.4286px; flex-direction: row-reverse; height: 15px;" />
         <ui:Button text="X" name="removeBtn" style="width: 18px; height: 16px; -unity-background-image-tint-color: rgb(245, 119, 119);" />
     </ui:VisualElement>
 </ui:UXML>

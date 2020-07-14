@@ -47,7 +47,7 @@ public interface IAudioEvent
     /// <summary>
     /// Unapplies the event based on t/FadeOut
     /// </summary>
-    /// <param name="t">How much times has passed since the fadeout started</param>
+    /// <param name="t">How much time has passed since the fadeout started</param>
     void Remove(float t);
 }
 

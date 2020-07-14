@@ -15,6 +15,7 @@ public class TrackTagger
 
     /// <summary>
     /// clipId to info
+    /// 
     /// </summary>
     private Dictionary<string, Track> assetDict;
 
@@ -59,7 +60,57 @@ public class TrackTagger
         return trackNames;
     }
 
-    public bool TrackIsLoaded(string guid) => assetDict.ContainsKey(guid);
+
+    /// <summary>
+    /// Gets track from internal asset dictionary
+    /// </summary>
+    /// <param name="id">key identifier for track</param>
+    /// <param name="track">the track if found</param>
+    /// <returns>true if the track was found</returns>
+    public bool GetTrack(string id, out Track track)
+    {
+        return assetDict.TryGetValue(id, out track);
+    }
+
+    /// <summary>
+    /// Updates any data stored within a Track strucutre inside this class
+    /// </summary>
+    /// <param name="track">The new track data to replace the old</param>
+    /// <param name="idOld">The previous id, used if the id has been updated</param>
+    public bool UpdateTrack(Track track, string idOld = null)
+    {
+        if (idOld != null)
+        {
+            if (!assetDict.Remove(idOld))
+            {
+                return false;
+            }
+            assetDict.Add(track.guid, track);
+
+            //update keys in trackTagDictionary as well
+            List<string>[] trackTagValues = new List<string>[trackTagDict.Values.Count];
+
+            trackTagDict.Values.CopyTo(trackTagValues, 0);
+
+            for (int i = 0; i < trackTagValues.Length; i++)
+            {
+                List<string> next = trackTagValues[i];
+
+                if (next.Remove(idOld))
+                {
+                    next.Add(track.guid);
+                }
+            }
+            
+        }
+        else
+        {
+            assetDict[track.guid] = track;
+        }
+
+
+        return true;
+    }
 
     public void TagTrack(string guid, string tag)
     { 

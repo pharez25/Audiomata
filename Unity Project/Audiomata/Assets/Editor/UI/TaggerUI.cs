@@ -1,17 +1,17 @@
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 public class TaggerUI : EditorWindow
 {
-    TrackTagger tagger;
+  
     VisualElement root;
 
     VisualTreeAsset tagElement;
 
-    int clipSelection = -1;
-    Track[] clips;
-    string[] clipTags;
+    string clipSelection = null;
+    Dictionary<string, AudioData> audioDataDict;
 
     [MenuItem("Window/Audiomata/Tagger")]
     public static void ShowExample()
@@ -24,7 +24,7 @@ public class TaggerUI : EditorWindow
     {
         // Each editor window contains a root VisualElement object
         root = rootVisualElement;
-        tagger = new TrackTagger();
+        
 
         // VisualElements objects can contain other VisualElement following a tree hierarchy.
 
@@ -53,44 +53,38 @@ public class TaggerUI : EditorWindow
 
     private void Save()
     {
-        string path =
-        EditorUtility.SaveFilePanel("Save TrackTags", "Assets", "track tags", "json");
-
-        if (!string.IsNullOrEmpty(path))
-        {
-            tagger.SaveAll(path);
-        }
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
     }
 
     private void Load()
     {
-        string path = EditorUtility.OpenFilePanel("Load Track Tag JSON", "Assets", "json");
-
-        if (string.IsNullOrEmpty(path))
-        {
-            return;
-        }
-        tagger.Load(path);
         RefreshAudioList();
         RefreshTagList();
     }
 
     private void AddTag()
     {
-        if (clipSelection < 0 || clipSelection >= clips.Length)
+        if (clipSelection == null)
         {
+            EditorUtility.DisplayDialog("No Track Selected", "Please Select a Track to Tag to it", "Ok");
             return;
         }
         
         TextField addTagField = root.Query<TextField>("addTagTxtField");
         string text = addTagField.text;
 
-        if (text.Length < 1 && text != "Tag Name")
+        if (text.Length < 1 || text == "Tag Name")
         {
             return;
         }
 
-        tagger.TagTrack(clips[clipSelection].guid,text);
+        AudioData audioData = audioDataDict[clipSelection];
+
+        audioData.tags.Add(text);
+
+        EditorUtility.SetDirty(audioData);
+
         RefreshTagList();
     }
 
@@ -102,26 +96,28 @@ public class TaggerUI : EditorWindow
         {
             clipScroll.RemoveAt(i);
         }
+        audioDataDict = new Dictionary<string, AudioData>();
+        AudioData[] allAudio = AssetImporter.GenerateAndLoadAllAudioData();
 
-
-        clips = tagger.GetAudioAssets();
-
-        for (int i = 0; i < clips.Length; i++)
+        for (int i = 0; i < allAudio.Length; i++)
         {
             Button clipSelector = new Button();
-            clipSelector.AddToClassList((i != clipSelection) ? "clipBtnUnselected" : "clipBtnSelected");
-            clipSelector.name = "clipBtn" + i;
+            AudioData nextTrack = allAudio[i];
+            clipSelector.AddToClassList((nextTrack.guid != clipSelection) ? "clipBtnUnselected" : "clipBtnSelected");
+            clipSelector.name = "clipBtn" + nextTrack.guid;
             clipSelector.clickable.clickedWithEventInfo += SetSelectedAudioCLip;
 
-            clipSelector.text = clips[i].name;
-            clipSelector.tooltip = clips[i].path;
+           
+            audioDataDict.Add(nextTrack.guid, nextTrack);
+            clipSelector.text = nextTrack.clip.name;
+            clipSelector.tooltip = AssetDatabase.GUIDToAssetPath(nextTrack.guid);
             clipScroll.Add(clipSelector);
         }
     }
 
     private void RefreshTagList()
     {
-        if(clipSelection<0 || clipSelection>= clips.Length)
+        if(clipSelection == null)
         {
             return;
         }
@@ -133,21 +129,22 @@ public class TaggerUI : EditorWindow
             tagScroll.RemoveAt(i);
         }
 
-        clipTags = tagger.GetTags(clips[clipSelection].guid);
+        List<string> targetTags = audioDataDict[clipSelection].tags;
 
-        if (clipTags == null)
+
+        if (targetTags.Count == 0)
         {
             return;
         }
 
-        for (int i = 0; i < clipTags.Length; i++)
+        for (int i = 0; i < targetTags.Count; i++)
         {
             TemplateContainer nextTagElement = tagElement.CloneTree();
             Label tagLabel = nextTagElement.Query<Label>("nameLabel");
             Button xBtn = nextTagElement.Query<Button>("removeBtn");
             xBtn.clickable.clickedWithEventInfo += RemoveTag;
 
-            tagLabel.text = clipTags[i];
+            tagLabel.text = targetTags[i];
             tagScroll.Add(nextTagElement);
         }
 
@@ -157,7 +154,9 @@ public class TaggerUI : EditorWindow
     {
         Button button = (Button)obj.target;
         Label label = button.parent.Query<Label>("nameLabel");
-        tagger.UntagTrack(clips[clipSelection].guid, label.text);
+        AudioData targetTrack = audioDataDict[clipSelection];
+        targetTrack.tags.Remove(label.text);
+        EditorUtility.SetDirty(targetTrack);
         RefreshTagList();
     }
 
@@ -165,22 +164,24 @@ public class TaggerUI : EditorWindow
     {
         Button target = (Button)obj.target;
 
-        int newSelection = int.Parse(target.name.Remove(0, 7));
+        string newSelection = target.name.Substring(7);
 
         if (newSelection == clipSelection)
         {
             target.RemoveFromClassList("clipBtnSelected");
             target.AddToClassList("clipBtnUnselected");
-            clipSelection = -1;
+            clipSelection = null;
         }
         else
         {
-            Button previous = root.Query<Button>("clipBtn" + clipSelection);
-
-            if (previous != null)
+            if (clipSelection != null)
             {
-                previous.RemoveFromClassList("clipBtnSelected");
-                previous.AddToClassList("clipBtnUnselected");
+                Button previous = root.Query<Button>("clipBtn" + clipSelection);
+                if(previous != null)
+                {
+                    previous.RemoveFromClassList("clipBtnSelected");
+                    previous.AddToClassList("clipBtnUnselected");
+                }
             }
 
             target.AddToClassList("clipBtnSelected");

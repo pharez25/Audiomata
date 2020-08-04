@@ -1,23 +1,22 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
-    <ui:Label text="Audiomata: Track Tagging" class="title" style="height: 30.33333px; width: 851.3333px;">
-        <Style path="Assets/StyleSheets/Main.uss" />
+    <ui:Label text="Audiomata: Track Tagging" class="title" style="height: 30.33333px; width: 687px;">
+        <Style src="/Assets/StyleSheets/Main.uss" />
     </ui:Label>
-    <ui:VisualElement class="side" style="width: 678px; height: 491.3333px; align-items: flex-start; flex-direction: row-reverse; flex-basis: initial;">
-        <Style path="Assets/StyleSheets/Main.uss" />
-        <ui:VisualElement class="side" style="height: 291.6667px; width: 724.3334px; left: 0;">
-            <ui:Label text="Tags" style="width: 256px; -unity-text-align: upper-center;" />
-            <ui:ScrollView name="tagScrollView" style="height: 228px; width: 260.3333px; border-left-width: 3px; border-right-width: 3px; border-top-width: 3px; border-bottom-width: 3px; border-color: rgba(0, 0, 0, 0.59);" />
-            <ui:VisualElement style="height: 38.33333px; width: 426.3333px; flex-direction: row;">
-                <ui:TextField value="filler text" text="Tag Name" name="addTagTxtField" max-length="50" style="height: 27.66667px; width: 160px;" />
-                <ui:Button text="Add" name="addTagBtn" style="height: 24px; width: 96.66667px;" />
+    <ui:VisualElement class="side" style="width: 678px; height: 491.3333px; align-items: flex-start; flex-direction: row-reverse; flex-basis: initial;">
+        <Style src="/Assets/StyleSheets/Main.uss" />
+        <ui:VisualElement class="side" style="height: 291.6667px; width: 724.3334px; left: 0;">
+            <ui:Label text="Tags" style="width: 256px; -unity-text-align: upper-center;" />
+            <ui:ScrollView name="tagScrollView" style="height: 228px; width: 260.3333px; border-left-width: 3px; border-right-width: 3px; border-top-width: 3px; border-bottom-width: 3px; border-color: rgba(0, 0, 0, 0.59);" />
+            <ui:VisualElement style="height: 38.33333px; width: 426.3333px; flex-direction: row;">
+                <ui:TextField value="filler text" text="Tag Name" name="addTagTxtField" max-length="50" style="height: 27.66667px; width: 160px;" />
+                <ui:Button text="Add" name="addTagBtn" style="height: 24px; width: 96.66667px;" />
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement class="side" style="height: 286.3333px; width: 648px; left: auto; right: 20px;">
-            <ui:Label text="Imported Audio Clips" style="height: 20.33334px; width: 248.3333px; -unity-text-align: upper-center;" />
-            <ui:ScrollView name="audioClipScrollView" style="height: 222px; width: 242px; margin-left: 3px; margin-right: 3px; margin-top: 3px; margin-bottom: 3px; border-left-width: 3px; border-right-width: 3px; border-top-width: 3px; border-bottom-width: 3px; left: 6px; border-color: rgba(0, 0, 0, 0.4);" />
-            <ui:VisualElement style="height: 36.33333px; flex-direction: row; width: 249.3333px;">
-                <ui:Button text="Save" name="saveBtn" style="height: 22.33333px; width: 119px;" />
-                <ui:Button text="Load" name="loadBtn" style="height: 22.33333px; width: 119px;" />
+        <ui:VisualElement class="side" style="height: 286.3333px; width: 648px; left: auto; right: 10px;">
+            <ui:Label text="Imported Audio Clips" style="height: 20.33334px; width: 248.3333px; -unity-text-align: upper-center;" />
+            <ui:ScrollView name="audioClipScrollView" style="height: 222px; width: 242px; margin-left: 3px; margin-right: 3px; margin-top: 3px; margin-bottom: 3px; border-left-width: 3px; border-right-width: 3px; border-top-width: 3px; border-bottom-width: 3px; left: 6px; border-color: rgba(0, 0, 0, 0.4);" />
+            <ui:VisualElement style="height: 36.33333px; flex-direction: row; width: 249.3333px;">
+                <ui:Button text="Refresh" name="refreshBtn" style="height: 22.33333px; width: 119px;" />
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

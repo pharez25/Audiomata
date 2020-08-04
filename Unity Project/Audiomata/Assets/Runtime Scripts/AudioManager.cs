@@ -1,39 +1,42 @@
 ﻿using UnityEngine;
-
-public class RuntimeAudioManager : MonoBehaviour
+namespace Audiomata
 {
-    [SerializeField]
-    private AudioClip[] clips;
 
-    [SerializeField]
-    private TextAsset taggingJson;
 
-    public RuntimeAudioManager Instance { get; private set; }
-
-    // Start is called before the first frame update
-    private void Awake()
+    public class AudioManager : MonoBehaviour
     {
-        if (!Instance)
+        [SerializeField]
+        private AudioData[] clips;
+
+
+
+        public static AudioManager Instance { get; private set; }
+
+        public QueryManager QueryManager { get; private set; }
+        public bool IsSetUp { get; private set; }
+
+        private void Awake()
         {
-            Instance = this;
-        }
-        else
-        {
-            Debug.LogError("2 Audiomata Runtime Managers present on this scene, this is a static-based class");
-            Destroy(this);
+            if (!Instance)
+            {
+                Instance = this;
+            }
+            else
+            {
+                Debug.LogError("2 Audiomata Runtime Managers present on this scene, this is a static-based class");
+                Destroy(this);
+                return;
+            }
+            QueryManager = new QueryManager(clips);
+            IsSetUp = true;
         }
 
-        
+        private void OnDestroy()
+        {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
+        }
     }
-
-    private void OnDestroy()
-    {
-        if (Instance == this)
-        {
-            Instance = null;
-        }
-    }
-
-    
-    
 }

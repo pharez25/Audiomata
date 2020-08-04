@@ -2,191 +2,262 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
+using System.Text.RegularExpressions;
 
-public class TaggerUI : EditorWindow
+namespace Audiomata
 {
-  
-    VisualElement root;
-
-    VisualTreeAsset tagElement;
-
-    string clipSelection = null;
-    Dictionary<string, AudioData> audioDataDict;
-
-    [MenuItem("Window/Audiomata/Tagger")]
-    public static void ShowExample()
+    public class TaggerUI : EditorWindow
     {
-        TaggerUI wnd = GetWindow<TaggerUI>();
-        wnd.titleContent = new GUIContent("Tagger");
-    }
 
-    public void OnEnable()
-    {
-        // Each editor window contains a root VisualElement object
-        root = rootVisualElement;
-        
+        VisualElement root;
 
-        // VisualElements objects can contain other VisualElement following a tree hierarchy.
+        VisualTreeAsset tagElement;
 
+        string clipSelection = null;
+        Dictionary<string, AudioData> audioDataDict;
 
-        // Import UXML
-        VisualTreeAsset visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/UI/Tagger.uxml");
-        VisualElement tagUI = visualTree.CloneTree();
-        root.Add(tagUI);
-
-        tagElement = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/UI/Tag.uxml");
-
-        // A stylesheet can be added to a VisualElement.
-        // The style will be applied to the VisualElement and all of its children.
-        StyleSheet styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/Editor/UI/Main.uss");
-
-        RefreshAudioList();
-        Button addTag = root.Query<Button>("addTagBtn");
-        addTag.clickable.clicked += AddTag;
-
-        Button saveBtn = root.Query<Button>("saveBtn");
-        saveBtn.clickable.clicked += Save;
-
-        Button loadBtn = root.Query<Button>("loadBtn");
-        loadBtn.clickable.clicked += Load;
-    }
-
-    private void Save()
-    {
-        AssetDatabase.SaveAssets();
-        AssetDatabase.Refresh();
-    }
-
-    private void Load()
-    {
-        RefreshAudioList();
-        RefreshTagList();
-    }
-
-    private void AddTag()
-    {
-        if (clipSelection == null)
+        [MenuItem("Window/Audiomata/Tagger")]
+        public static void ShowExample()
         {
-            EditorUtility.DisplayDialog("No Track Selected", "Please Select a Track to Tag to it", "Ok");
-            return;
-        }
-        
-        TextField addTagField = root.Query<TextField>("addTagTxtField");
-        string text = addTagField.text;
-
-        if (text.Length < 1 || text == "Tag Name")
-        {
-            return;
+            TaggerUI wnd = GetWindow<TaggerUI>();
+            wnd.titleContent = new GUIContent("Tagger");
         }
 
-        AudioData audioData = audioDataDict[clipSelection];
-
-        audioData.tags.Add(text);
-
-        EditorUtility.SetDirty(audioData);
-
-        RefreshTagList();
-    }
-
-    private void RefreshAudioList()
-    {
-        ScrollView clipScroll = root.Query<ScrollView>("audioClipScrollView");
-        
-        for (int i = clipScroll.childCount-1; i > -1; i--)
+        public void OnEnable()
         {
-            clipScroll.RemoveAt(i);
-        }
-        audioDataDict = new Dictionary<string, AudioData>();
-        AudioData[] allAudio = AssetImporter.GenerateAndLoadAllAudioData();
-
-        for (int i = 0; i < allAudio.Length; i++)
-        {
-            Button clipSelector = new Button();
-            AudioData nextTrack = allAudio[i];
-            clipSelector.AddToClassList((nextTrack.guid != clipSelection) ? "clipBtnUnselected" : "clipBtnSelected");
-            clipSelector.name = "clipBtn" + nextTrack.guid;
-            clipSelector.clickable.clickedWithEventInfo += SetSelectedAudioCLip;
-
-           
-            audioDataDict.Add(nextTrack.guid, nextTrack);
-            clipSelector.text = nextTrack.clip.name;
-            clipSelector.tooltip = AssetDatabase.GUIDToAssetPath(nextTrack.guid);
-            clipScroll.Add(clipSelector);
-        }
-    }
-
-    private void RefreshTagList()
-    {
-        if(clipSelection == null)
-        {
-            return;
-        }
-
-        ScrollView tagScroll = root.Query<ScrollView>("tagScrollView");
-
-        for (int i = tagScroll.childCount - 1; i > -1; i--)
-        {
-            tagScroll.RemoveAt(i);
-        }
-
-        List<string> targetTags = audioDataDict[clipSelection].tags;
+            // Each editor window contains a root VisualElement object
+            root = rootVisualElement;
 
 
-        if (targetTags.Count == 0)
-        {
-            return;
-        }
+            // VisualElements objects can contain other VisualElement following a tree hierarchy.
 
-        for (int i = 0; i < targetTags.Count; i++)
-        {
-            TemplateContainer nextTagElement = tagElement.CloneTree();
-            Label tagLabel = nextTagElement.Query<Label>("nameLabel");
-            Button xBtn = nextTagElement.Query<Button>("removeBtn");
-            xBtn.clickable.clickedWithEventInfo += RemoveTag;
 
-            tagLabel.text = targetTags[i];
-            tagScroll.Add(nextTagElement);
-        }
+            // Import UXML
+            VisualTreeAsset visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/UI/Tagger.uxml");
+            VisualElement tagUI = visualTree.CloneTree();
+            root.Add(tagUI);
 
-    }
+            tagElement = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/UI/Tag.uxml");
 
-    private void RemoveTag(EventBase obj)
-    {
-        Button button = (Button)obj.target;
-        Label label = button.parent.Query<Label>("nameLabel");
-        AudioData targetTrack = audioDataDict[clipSelection];
-        targetTrack.tags.Remove(label.text);
-        EditorUtility.SetDirty(targetTrack);
-        RefreshTagList();
-    }
+            // A stylesheet can be added to a VisualElement.
+            // The style will be applied to the VisualElement and all of its children.
+            StyleSheet mainFormSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/StyleSheets/Main.uss");
+            StyleSheet tagStyle = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/StyleSheets/Tag.uss");
 
-    private void SetSelectedAudioCLip(EventBase obj)
-    {
-        Button target = (Button)obj.target;
-
-        string newSelection = target.name.Substring(7);
-
-        if (newSelection == clipSelection)
-        {
-            target.RemoveFromClassList("clipBtnSelected");
-            target.AddToClassList("clipBtnUnselected");
-            clipSelection = null;
-        }
-        else
-        {
-            if (clipSelection != null)
+            if (mainFormSheet)
             {
-                Button previous = root.Query<Button>("clipBtn" + clipSelection);
-                if(previous != null)
-                {
-                    previous.RemoveFromClassList("clipBtnSelected");
-                    previous.AddToClassList("clipBtnUnselected");
-                }
+                root.styleSheets.Add(mainFormSheet);
+            }
+            else
+            {
+                Debug.LogError("Audiomata: Main Tagger form style sheet missing, Fixed path: Assets/StyleSheets/Main.uss ");
             }
 
-            target.AddToClassList("clipBtnSelected");
-            clipSelection = newSelection;
+            if (tagStyle)
+            {
+                root.styleSheets.Add(tagStyle);
+            }
+            else
+            {
+                Debug.LogError("Audiomata:Tag style sheet missing, Fixed path: Assets/StyleSheets/Tag.uss ");
+            }
+
+
+
+            RefreshAudioList();
+            Button addTag = root.Query<Button>("addTagBtn");
+            addTag.clickable.clicked += AddTag;
+
+            Button loadBtn = root.Query<Button>("refreshBtn");
+            loadBtn.clickable.clicked += Refresh;
         }
-        RefreshTagList();
+
+        private void Refresh()
+        {
+            RefreshAudioList();
+            RefreshTagList();
+        }
+
+        private void AddTag()
+        {
+            if (clipSelection == null)
+            {
+                EditorUtility.DisplayDialog("No Track Selected", "Please Select a Track to Tag to it", "Ok");
+                return;
+            }
+
+            TextField addTagField = root.Query<TextField>("addTagTxtField");
+            string tag = addTagField.text;
+
+            if (ValidateTag(ref tag, out string reason))
+            {
+                AudioData audioData = audioDataDict[clipSelection];
+
+                audioData.tags.Add(tag);
+
+                EditorUtility.SetDirty(audioData);
+
+                RefreshTagList();
+
+                //could use event propagation here
+                addTagField.SetValueWithoutNotify("");
+                addTagField.MarkDirtyRepaint();
+            }
+            else
+            {
+                EditorUtility.DisplayDialog("Invalid Tag", reason, "OK");
+            }
+        }
+
+        private void RefreshAudioList()
+        {
+            ScrollView clipScroll = root.Query<ScrollView>("audioClipScrollView");
+
+            for (int i = clipScroll.childCount - 1; i > -1; i--)
+            {
+                clipScroll.RemoveAt(i);
+            }
+            audioDataDict = new Dictionary<string, AudioData>();
+            AudioData[] allAudio = AssetImporter.GenerateAndLoadAllAudioData();
+
+            for (int i = 0; i < allAudio.Length; i++)
+            {
+                Button clipSelector = new Button();
+                AudioData nextTrack = allAudio[i];
+                clipSelector.AddToClassList((nextTrack.guid != clipSelection) ? "clipBtnUnselected" : "clipBtnSelected");
+                clipSelector.name = "clipBtn" + nextTrack.guid;
+                clipSelector.clickable.clickedWithEventInfo += SetSelectedAudioCLip;
+
+
+                audioDataDict.Add(nextTrack.guid, nextTrack);
+                clipSelector.text = nextTrack.clip.name;
+                clipSelector.tooltip = AssetDatabase.GUIDToAssetPath(nextTrack.guid);
+                clipScroll.Add(clipSelector);
+            }
+        }
+
+        private void RefreshTagList()
+        {
+            if (clipSelection == null)
+            {
+                return;
+            }
+
+            ScrollView tagScroll = root.Query<ScrollView>("tagScrollView");
+
+            for (int i = tagScroll.childCount - 1; i > -1; i--)
+            {
+                tagScroll.RemoveAt(i);
+            }
+
+            List<string> targetTags = audioDataDict[clipSelection].tags;
+
+
+            if (targetTags.Count == 0)
+            {
+                return;
+            }
+
+            for (int i = 0; i < targetTags.Count; i++)
+            {
+                TemplateContainer nextTagElement = tagElement.CloneTree();
+                Label tagLabel = nextTagElement.Query<Label>("nameLabel");
+                Button xBtn = nextTagElement.Query<Button>("removeBtn");
+                xBtn.clickable.clickedWithEventInfo += RemoveTag;
+
+                tagLabel.text = targetTags[i];
+                tagScroll.Add(nextTagElement);
+            }
+
+        }
+
+        public static bool ValidateTag(ref string tag)
+        {
+            if (tag.Length < 1 || tag == "Tag Name")
+            {
+                return false;
+            }
+
+            tag = tag.Trim();
+            Regex validCharsRegex = new Regex(@"[A-Z 0-9 \s \- _]", RegexOptions.IgnoreCase);
+
+            int matchCount = validCharsRegex.Matches(tag).Count;
+
+            if (matchCount != tag.Length)
+            {
+                return false;
+            }
+            //regex src: https://regexr.com/38p23
+            Regex spaceTrimmer = new Regex(@"(?:\s)\s");
+            //removes any excessive whitespace between words
+            tag = spaceTrimmer.Replace(tag, " ");
+            return true;
+        }
+
+        public static bool ValidateTag(ref string tag, out string reason)
+        {
+            if (tag.Length < 1 || tag == "Tag Name")
+            {
+                reason = "Tag Empty or Placeholder";
+                return false;
+            }
+
+            tag = tag.Trim();
+            Regex validCharsRegex = new Regex(@"[A-Z 0-9 \s \- _]", RegexOptions.IgnoreCase);
+
+            int matchCount = validCharsRegex.Matches(tag).Count;
+
+            if (matchCount != tag.Length)
+            {
+                reason = "Tag contains invalid characters Only letters,numbers,space,hyphens and underscores are allowed";
+                return false;
+            }
+            //regex src: https://regexr.com/38p23
+            Regex spaceTrimmer = new Regex(@"(?:\s)\s");
+            //removes any excessive whitespace between words
+            tag = spaceTrimmer.Replace(tag, " ");
+            reason = null;
+            return true;
+        }
+
+        private void RemoveTag(EventBase obj)
+        {
+            Button button = (Button)obj.target;
+            Label label = button.parent.Query<Label>("nameLabel");
+            AudioData targetTrack = audioDataDict[clipSelection];
+            targetTrack.tags.Remove(label.text);
+            EditorUtility.SetDirty(targetTrack);
+            RefreshTagList();
+        }
+
+        private void SetSelectedAudioCLip(EventBase obj)
+        {
+            Button target = (Button)obj.target;
+
+            string newSelection = target.name.Substring(7);
+
+            if (newSelection == clipSelection)
+            {
+                target.RemoveFromClassList("clipBtnSelected");
+                target.AddToClassList("clipBtnUnselected");
+                clipSelection = null;
+            }
+            else
+            {
+                if (clipSelection != null)
+                {
+                    Button previous = root.Query<Button>("clipBtn" + clipSelection);
+                    if (previous != null)
+                    {
+                        previous.RemoveFromClassList("clipBtnSelected");
+                        previous.AddToClassList("clipBtnUnselected");
+                    }
+                }
+
+                target.AddToClassList("clipBtnSelected");
+                clipSelection = newSelection;
+            }
+            RefreshTagList();
+        }
     }
 }

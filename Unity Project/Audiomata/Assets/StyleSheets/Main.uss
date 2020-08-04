@@ -13,10 +13,14 @@
 .clipBtnSelected {
     align-items: center;
     width: 240px;
-    color: rgb(135, 133, 133);
+    color: rgb(243, 240, 240);
+    -unity-font-style: normal;
+    background-color: rgba(110, 152, 101, 255);
+    font-size: 15px;
 }
 
 .clipBtnUnselected {
     align-items: center;
     width: 240px;
+    -unity-font-style: italic;
 }

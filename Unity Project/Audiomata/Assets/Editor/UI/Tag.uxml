@@ -1,5 +1,5 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
-    <ui:VisualElement name="tagContainer" class="tagElement" style="justify-content: center; align-items: center; background-color: rgba(50, 137, 54, 255);">
+    <ui:VisualElement name="tagContainer" class="tagElement" style="justify-content: center; align-items: center; background-color: rgb(50, 137, 54); width: 100%;">
         <Style src="/Assets/StyleSheets/Tag.uss" />
         <ui:Label text="Label" name="nameLabel" class="nameLabel" />
         <ui:Button text="X" name="removeBtn" class="removeBtn" />

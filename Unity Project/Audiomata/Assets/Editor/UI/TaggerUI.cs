@@ -1,8 +1,8 @@
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
-using System.Text.RegularExpressions;
 
 namespace Audiomata
 {
@@ -15,6 +15,8 @@ namespace Audiomata
 
         string clipSelection = null;
         Dictionary<string, AudioData> audioDataDict;
+
+        List<string> allTags;
 
         [MenuItem("Window/Audiomata/Tagger")]
         public static void ShowExample()
@@ -62,11 +64,11 @@ namespace Audiomata
                 Debug.LogError("Audiomata:Tag style sheet missing, Fixed path: Assets/StyleSheets/Tag.uss ");
             }
 
-
-
             RefreshAudioList();
+            AllTagUIRefresh();
+
             Button addTag = root.Query<Button>("addTagBtn");
-            addTag.clickable.clicked += AddTag;
+            addTag.clickable.clicked += AddTagFromTxtBx;
 
             Button loadBtn = root.Query<Button>("refreshBtn");
             loadBtn.clickable.clicked += Refresh;
@@ -78,7 +80,7 @@ namespace Audiomata
             RefreshTagList();
         }
 
-        private void AddTag()
+        private void AddTagFromTxtBx()
         {
             if (clipSelection == null)
             {
@@ -97,6 +99,12 @@ namespace Audiomata
 
                 EditorUtility.SetDirty(audioData);
 
+                if (!allTags.Contains(tag))
+                {
+                    allTags.Add(tag);
+                    allTags.Sort();
+                }
+
                 RefreshTagList();
 
                 //could use event propagation here
@@ -109,6 +117,49 @@ namespace Audiomata
             }
         }
 
+        private void AllTagUIRefresh()
+        {
+            ScrollView recentTagRegion = root.Query<ScrollView>("recentTags");
+
+            for (int i = recentTagRegion.childCount - 1; i > -1; i--)
+            {
+                recentTagRegion.RemoveAt(i);
+            }
+
+            for (int i = 0; i < allTags.Count; i++)
+            {
+                string nextTag = allTags[i];
+
+                Button tagButton = new Button();
+                tagButton.style.maxWidth = 280;
+                tagButton.style.minWidth = 120;
+                tagButton.style.height = 20;
+                tagButton.text = nextTag;
+                tagButton.clickable.clickedWithEventInfo += AddTagByRecents;
+                recentTagRegion.Add(tagButton);
+            }
+
+        }
+
+        private void AddTagByRecents(EventBase btn)
+        {
+            if (clipSelection == null)
+            {
+                EditorUtility.DisplayDialog("No Track Selected", "Please Select a Track to Tag to it", "Ok");
+                return;
+            }
+
+            string tag = ((Button)btn.target).text;
+            List<string> targetTags = audioDataDict[clipSelection].tags;
+            if (targetTags.Contains(tag))
+            {
+                EditorUtility.DisplayDialog("Tag Already Added", "This tag is already on the selected clip","OK");
+                return;
+            }
+            targetTags.Add(tag);
+            RefreshTagList();
+        }
+
         private void RefreshAudioList()
         {
             ScrollView clipScroll = root.Query<ScrollView>("audioClipScrollView");
@@ -118,22 +169,37 @@ namespace Audiomata
                 clipScroll.RemoveAt(i);
             }
             audioDataDict = new Dictionary<string, AudioData>();
+            allTags = new List<string>();
             AudioData[] allAudio = AssetImporter.GenerateAndLoadAllAudioData();
 
             for (int i = 0; i < allAudio.Length; i++)
             {
+                //add clip button
                 Button clipSelector = new Button();
                 AudioData nextTrack = allAudio[i];
                 clipSelector.AddToClassList((nextTrack.guid != clipSelection) ? "clipBtnUnselected" : "clipBtnSelected");
                 clipSelector.name = "clipBtn" + nextTrack.guid;
                 clipSelector.clickable.clickedWithEventInfo += SetSelectedAudioCLip;
 
-
                 audioDataDict.Add(nextTrack.guid, nextTrack);
                 clipSelector.text = nextTrack.clip.name;
                 clipSelector.tooltip = AssetDatabase.GUIDToAssetPath(nextTrack.guid);
                 clipScroll.Add(clipSelector);
+
+                //add uniqueTags
+                List<string> clipTags = nextTrack.tags;
+
+                for (int j = 0; j < clipTags.Count; j++)
+                {
+                    string nextTag = clipTags[j];
+                    if (!allTags.Contains(nextTag))
+                    {
+                        allTags.Add(nextTag);
+                    }
+                }
             }
+
+            allTags.Sort();
         }
 
         private void RefreshTagList()

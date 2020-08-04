@@ -15,7 +15,7 @@
     width: 240px;
     color: rgb(243, 240, 240);
     -unity-font-style: normal;
-    background-color: rgba(110, 152, 101, 255);
+    background-color: rgb(110, 152, 101);
     font-size: 15px;
 }
 

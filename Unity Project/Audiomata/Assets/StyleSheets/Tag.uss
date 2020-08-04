@@ -4,7 +4,7 @@
     flex-direction: row-reverse;
     height: 15px;
     -unity-font-style: bold;
-    color: rgba(255, 255, 255, 255);
+    color: rgb(255, 255, 255);
 }
 
 #removeBtn {
@@ -18,8 +18,8 @@
 }
 
 #removeBtn:hover {
-    background-color: rgba(226, 95, 95, 255);
-    color: rgba(255, 255, 255, 255);
+    background-color: rgb(226, 95, 95);
+    color: rgb(255, 255, 255);
     -unity-font-style: bold;
 }
 

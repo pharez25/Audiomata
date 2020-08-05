@@ -37,9 +37,29 @@ namespace Audiomata
             return samples;
         }
 
+        /// <summary>
+        /// Removes any excess files from metadata folder, will also remove all files that are not AudioData 
+        /// </summary>
+        public static void CleanAudioData()
+        {
+            string[] audioDataPaths = Directory.GetFiles(Application.dataPath + @"\Audiomata\Generated Data\Track Metadata", "*.asset",SearchOption.TopDirectoryOnly);
+
+            for (int i = 0; i < audioDataPaths.Length; i++)
+            {
+                string nextFullPath = audioDataPaths[i];
+                string fileName = Path.GetFileNameWithoutExtension(nextFullPath);
+                string audioClipGuid = nextFullPath.Substring(11);
+
+                if(AssetDatabase.GUIDToAssetPath(audioClipGuid) == null)
+                {
+                    AssetDatabase.DeleteAsset(nextFullPath);
+                }
+            }
+        }
+
         public static AudioData GetSampleData(string clipGuid) => AssetDatabase.LoadAssetAtPath<AudioData>(GetPath(clipGuid));
 
-        public static bool SampleExists(string clipGuid) => AssetDatabase.LoadAssetAtPath<AudioData>(GetPath(clipGuid)) != null;
+        public static bool MetaDataExists(string clipGuid) => AssetDatabase.LoadAssetAtPath<AudioData>(GetPath(clipGuid)) != null;
 
         private static string GetPath(string clipGuid) => dataDirectory + fileNamePrefix + clipGuid + ".asset";
 

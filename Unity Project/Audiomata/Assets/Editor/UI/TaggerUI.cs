@@ -63,21 +63,35 @@ namespace Audiomata
             {
                 Debug.LogError("Audiomata:Tag style sheet missing, Fixed path: Assets/StyleSheets/Tag.uss ");
             }
-
+            CleanMetaData();
             RefreshAudioList();
             AllTagUIRefresh();
 
             Button addTag = root.Query<Button>("addTagBtn");
             addTag.clickable.clicked += AddTagFromTxtBx;
 
-            Button loadBtn = root.Query<Button>("refreshBtn");
-            loadBtn.clickable.clicked += Refresh;
+            Button refreshButton = root.Query<Button>("refreshBtn");
+            refreshButton.clickable.clicked += Refresh;
+
+            Button cleanButton = root.Query<Button>("cleanBtn");
+            cleanButton.clickable.clicked += () => CleanMetaData(true);
         }
 
         private void Refresh()
         {
             RefreshAudioList();
             RefreshTagList();
+        }
+
+        private void CleanMetaData(bool withRefresh = false)
+        {
+            AssetImporter.CleanAudioData();
+            if (withRefresh)
+            {
+                RefreshAudioList();
+                AllTagUIRefresh();
+                RefreshTagList();
+            }
         }
 
         private void AddTagFromTxtBx()
@@ -237,6 +251,11 @@ namespace Audiomata
 
         }
 
+        /// <summary>
+        /// Validates the tag and removes any excess whitespace
+        /// </summary>
+        /// <param name="tag">The tag to be validated</param>        
+        /// <returns>True if the tag is valid for the system</returns>
         public static bool ValidateTag(ref string tag)
         {
             if (tag.Length < 1 || tag == "Tag Name")
@@ -260,6 +279,12 @@ namespace Audiomata
             return true;
         }
 
+        /// <summary>
+        /// Validates the tag and removes any excess whitespace
+        /// </summary>
+        /// <param name="tag">The tag to be validated</param>
+        /// <param name="reason">The reason why it was rejected (returns null if the tag is valid)</param>
+        /// <returns>True if the tag is valid for the system</returns>
         public static bool ValidateTag(ref string tag, out string reason)
         {
             if (tag.Length < 1 || tag == "Tag Name")
@@ -267,17 +292,16 @@ namespace Audiomata
                 reason = "Tag Empty or Placeholder";
                 return false;
             }
-
             tag = tag.Trim();
             Regex validCharsRegex = new Regex(@"[A-Z 0-9 \s \- _]", RegexOptions.IgnoreCase);
 
             int matchCount = validCharsRegex.Matches(tag).Count;
-
             if (matchCount != tag.Length)
             {
-                reason = "Tag contains invalid characters Only letters,numbers,space,hyphens and underscores are allowed";
+                reason = "Tag contains invalid characters only letters,numbers,spaces,hyphens and underscores are allowed";
                 return false;
             }
+            tag = tag.Trim();
             //regex src: https://regexr.com/38p23
             Regex spaceTrimmer = new Regex(@"(?:\s)\s");
             //removes any excessive whitespace between words

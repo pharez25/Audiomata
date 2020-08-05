@@ -1,18 +1,23 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using System;
 
 namespace Audiomata
 {
     public class QueryManager
     {
-        private Dictionary<string, List<string>> tagsToGuidsDict;
-        private Dictionary<string, AudioClip> guidToClipDict;
-
+        //USE NORMAL DICTIONARIES O(1) vs O(n)
+        private SortedDictionary<string, List<string>> tagsToGuidsDict;
+        private SortedDictionary<string, AudioClip> guidToClipDict;
+       
+        
         public QueryManager(AudioData[] audioData)
         {
-            tagsToGuidsDict = new Dictionary<string, List<string>>();
-            guidToClipDict = new Dictionary<string, AudioClip>();
+            tagsToGuidsDict = new SortedDictionary<string, List<string>>();
+            guidToClipDict = new SortedDictionary<string, AudioClip>();
 
+            //populate audio data
             for (int i = 0; i < audioData.Length; i++)
             {
                 AudioData nextAD = audioData[i];
@@ -54,5 +59,68 @@ namespace Audiomata
         }
 
         public AudioClip GetTrackById(string id) => guidToClipDict[id];
+
+        public AudioClip QueryAudio(string query)
+        {
+            char op = '3';
+            //work out the above then complete the below : )
+            switch (op)
+            {
+                case '&':
+
+                    break;
+                default:
+                    throw new InvalidOperationException("Unknown Op Character, Audiomata query invalid");
+                   
+            }
+
+            throw new System.NotImplementedException();
+        }
+        
+        private IQueryable<string> XorTagQ(string subQString, int opIndex, IQueryable<string> current)
+        {
+            string tag1 = subQString.Substring(0, opIndex);
+            int t2StartIdx = opIndex + 1;
+            string tag2 = subQString.Substring(t2StartIdx, subQString.Length - t2StartIdx);
+
+            IQueryable<string> nextQuery = from a in current
+                                          where (a == tag1) ^ (a == tag2)
+                                          select a;
+            return nextQuery;
+        }
+
+        private IQueryable<string> OrTagQ(string subQString, int opIndex, IQueryable<string> current)
+        {
+            string tag1 = subQString.Substring(0, opIndex);
+            int t2StartIdx = opIndex + 1;
+            string tag2 = subQString.Substring(t2StartIdx, subQString.Length - t2StartIdx);
+
+            IQueryable<string> nextQuery = from a in current
+                                           where a == tag1 || a == tag2
+                                           select a;
+            return nextQuery;
+        }
+
+        private IQueryable<string> AndTagQ(string subQString, int opIndex, IQueryable<string> current)
+        {
+            string tag1 = subQString.Substring(0, opIndex);
+            int t2StartIdx = opIndex + 1;
+            string tag2 = subQString.Substring(t2StartIdx, subQString.Length - t2StartIdx);
+
+            IQueryable<string> nextQuery = from a in current
+                                           where a == tag1 && a == tag2
+                                           select a;
+            return nextQuery;
+        }
+
+        private IQueryable<string>EqualTagQ(string subQString, int opIndex, IQueryable<string> current)
+        {
+            IQueryable<string> nextQuery = from a in current
+                                           where a == subQString
+                                           select a;
+            return nextQuery;
+        }
     }
+
+   
 }

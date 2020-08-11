@@ -6,10 +6,10 @@
         <Style src="/Assets/StyleSheets/Main.uss" />
         <ui:VisualElement class="side" style="height: 300px; width: 40%; position: absolute;">
             <ui:Label text="Tags" style="width: 100%; -unity-text-align: upper-center; font-size: 14px; -unity-font-style: bold;" />
-            <ui:ScrollView name="tagScrollView" style="height: 300px; width: 90%; border-left-width: 3px; border-right-width: 3px; border-top-width: 3px; border-bottom-width: 3px; border-color: rgba(0, 0, 0, 0.59); align-items: auto;" />
-            <ui:VisualElement style="height: 31px; width: 271px; flex-direction: row;">
+            <ui:ScrollView name="tagScrollView" style="height: 300px; width: 90%; border-left-width: 3px; border-right-width: 3px; border-top-width: 3px; border-bottom-width: 3px; border-color: rgba(0, 0, 0, 0.59);" />
+            <ui:VisualElement style="height: 31px; width: 271px; flex-direction: row; position: absolute; bottom: -15%;">
                 <ui:TextField value="filler text" text="Tag Name" name="addTagTxtField" max-length="50" style="height: 27.66667px; width: 160px;" />
-                <ui:Button text="Add" name="addTagBtn" style="height: 24px; width: 96.66667px;" />
+                <ui:Button text="Add" name="addTagBtn" style="height: 24px; width: 96.66667px; position: absolute; right: 0;" />
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement class="side" style="height: 300px; width: 40%; position: absolute; right: 396px;">
@@ -20,7 +20,7 @@
                 <ui:Button text="Clean " name="cleanBtn" tooltip="Removes clip data if they are no longer present" style="height: 22.33333px; width: 119px;" />
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement style="position: absolute; bottom: 1%; width: 363px; left: 315px;">
+        <ui:VisualElement style="position: absolute; bottom: 1%; width: 363px; height: 63.33334px;">
             <ui:Label text="Quick Add Tags" style="width: 104px; margin-top: 20px;" />
             <ui:ScrollView name="recentTags" view-data-key="recent-tags-scView" tooltip="Click on  a tag to add it to the track" mode="Horizontal" style="height: 47px; width: 359px; border-left-color: rgb(113, 105, 105); border-right-color: rgb(113, 105, 105); border-top-color: rgb(113, 105, 105); border-bottom-color: rgb(113, 105, 105); border-left-width: 2px; border-right-width: 2px; border-top-width: 2px; border-bottom-width: 2px; flex-direction: row;" />
         </ui:VisualElement>

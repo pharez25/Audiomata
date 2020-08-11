@@ -1,21 +1,30 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using System;
 
 namespace Audiomata
 {
     public class QueryManager
     {
-        //USE NORMAL DICTIONARIES O(1) vs O(n)
-        private SortedDictionary<string, List<string>> tagsToGuidsDict;
-        private SortedDictionary<string, AudioClip> guidToClipDict;
-       
-        
+        //REFACTOR JUST USE AUDIODATA OR CLIPS
+        private Dictionary<string, List<string>> tagsToGuidsDict;
+        private Dictionary<string, AudioClip> guidToClipDict;
+        private readonly Dictionary<char, PerformOperation> queryOpDict;
+
+        private const char noOpChar = '~';
+
         public QueryManager(AudioData[] audioData)
         {
-            tagsToGuidsDict = new SortedDictionary<string, List<string>>();
-            guidToClipDict = new SortedDictionary<string, AudioClip>();
+            tagsToGuidsDict = new Dictionary<string, List<string>>();
+            guidToClipDict = new Dictionary<string, AudioClip>();
+            queryOpDict = new Dictionary<char, PerformOperation>()
+            {
+                ['|'] = OrLstSet,
+                ['&'] = AndLstSet,
+              //  ['^'] = XorTagQ,
+                ['!'] = NotLstSet,
+               // ['='] = EqualTagQ
+            };
 
             //populate audio data
             for (int i = 0; i < audioData.Length; i++)
@@ -51,7 +60,7 @@ namespace Audiomata
 
             if (tagsToGuidsDict.TryGetValue(tag, out guids))
             {
-                string guidChoice = guids[Random.Range(0, guids.Count)];
+                string guidChoice = guids[UnityEngine.Random.Range(0, guids.Count)];
                 return guidToClipDict[guidChoice];
             }
 
@@ -60,67 +69,115 @@ namespace Audiomata
 
         public AudioClip GetTrackById(string id) => guidToClipDict[id];
 
+        public delegate void PerformOperation(ref IEnumerable<string> currentSet, string targetTag);
+
+        /// <summary>
+        /// Queries all the tags and returns a random audioclip from the filtered set
+        /// </summary>
+        /// <param name="query">string to query, follows c# syntax e.g. "example|!Unity&Audiomata"</param>
+        /// <returns>An AudioClip that matches the query criteria </returns>
         public AudioClip QueryAudio(string query)
         {
-            char op = '3';
-            //work out the above then complete the below : )
-            switch (op)
+            string nextTag = GetNextTag(query, out char currentOp, out int lastStopIdx);
+            if (nextTag == null)
             {
-                case '&':
+                Debug.LogError("Querier Failed to find operators");
+                return null;
+            }
+            IEnumerable<string> currentSet;
 
+            string[] tmpGuids = new string[guidToClipDict.Count];
+            guidToClipDict.Keys.CopyTo(tmpGuids, 0);
+            currentSet = tmpGuids;
+            queryOpDict[currentOp](ref currentSet, nextTag);
+
+            for (int i = lastStopIdx; i < query.Length; i++)
+            {
+                nextTag = GetNextTag(query, out currentOp, out i, i);
+
+                if(nextTag == null)
+                {
                     break;
-                default:
-                    throw new InvalidOperationException("Unknown Op Character, Audiomata query invalid");
-                   
+                }
+
+                queryOpDict[currentOp](ref currentSet, nextTag);
             }
 
-            throw new System.NotImplementedException();
+            List<string> filteredGuids = currentSet.ToList();
+            if (filteredGuids.Count > 0)
+            {
+                string selectedGuid = filteredGuids[UnityEngine.Random.Range(0, filteredGuids.Count)];
+                return guidToClipDict[selectedGuid];
+
+            }
+            return null;
         }
+
+        private string GetNextTag(string query, out char nextOpChar, out int stoppageIdx, int startIdx = 0)
+        {
+            string nextTag = null;
+
+            for (int i = startIdx; i < query.Length; i++)
+            {
+                char next = query[i];
+
+                if (IsOp(next))
+                {
+
+                    if (next == '!')
+                    {
+                        int nextOpIdx = i + 1;
+
+                        while (nextOpIdx < query.Length && !IsOp(query[nextOpIdx]))
+                        {
+                            nextOpIdx++;
+                        }
+
+                        nextTag = query.Substring(startIdx, i - startIdx);
+                    }
+                    else
+                    {
+                        nextTag = query.Substring(startIdx, i);
+                    }
+
+                    nextOpChar = next;
+                    stoppageIdx = i;
+                    return nextTag;
+
+                }
+            }
+
+            nextOpChar = noOpChar;
+            stoppageIdx = query.Length;
+            return nextTag;
+        }
+
+        private bool IsOp(char c) => queryOpDict.ContainsKey(c);
         
-        private IQueryable<string> XorTagQ(string subQString, int opIndex, IQueryable<string> current)
+        public string[] GetAllTags()
         {
-            string tag1 = subQString.Substring(0, opIndex);
-            int t2StartIdx = opIndex + 1;
-            string tag2 = subQString.Substring(t2StartIdx, subQString.Length - t2StartIdx);
-
-            IQueryable<string> nextQuery = from a in current
-                                          where (a == tag1) ^ (a == tag2)
-                                          select a;
-            return nextQuery;
+            string[] allTags = new string[tagsToGuidsDict.Count];
+            tagsToGuidsDict.Keys.CopyTo(allTags, 0);
+            return allTags;
         }
 
-        private IQueryable<string> OrTagQ(string subQString, int opIndex, IQueryable<string> current)
+        //ops where done this way to allow very easy expansion where necessary. Arguably would be more efficient to use a swith statement
+        private void OrLstSet(ref IEnumerable<string> currentSet, string targetTag)
         {
-            string tag1 = subQString.Substring(0, opIndex);
-            int t2StartIdx = opIndex + 1;
-            string tag2 = subQString.Substring(t2StartIdx, subQString.Length - t2StartIdx);
-
-            IQueryable<string> nextQuery = from a in current
-                                           where a == tag1 || a == tag2
-                                           select a;
-            return nextQuery;
+            currentSet.Union(tagsToGuidsDict[targetTag]);
+          
         }
 
-        private IQueryable<string> AndTagQ(string subQString, int opIndex, IQueryable<string> current)
+        private void AndLstSet(ref IEnumerable<string> currentSet, string targetTag)
         {
-            string tag1 = subQString.Substring(0, opIndex);
-            int t2StartIdx = opIndex + 1;
-            string tag2 = subQString.Substring(t2StartIdx, subQString.Length - t2StartIdx);
+            List<string> secondTagLst = tagsToGuidsDict[targetTag];
 
-            IQueryable<string> nextQuery = from a in current
-                                           where a == tag1 && a == tag2
-                                           select a;
-            return nextQuery;
+            currentSet.Where(t1 => secondTagLst.Contains(t1));
         }
 
-        private IQueryable<string>EqualTagQ(string subQString, int opIndex, IQueryable<string> current)
+        private void NotLstSet(ref IEnumerable<string> currentSet, string targetTag)
         {
-            IQueryable<string> nextQuery = from a in current
-                                           where a == subQString
-                                           select a;
-            return nextQuery;
+            currentSet.Except(tagsToGuidsDict[targetTag]);
         }
     }
-
-   
 }

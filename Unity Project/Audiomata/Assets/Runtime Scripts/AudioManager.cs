@@ -1,18 +1,26 @@
 ﻿using UnityEngine;
 namespace Audiomata
 {
-
-
+    /// <summary>
+    /// Entrypoint for all in game systems within Audiomata, most if not all runtime systems are contained within this class
+    /// </summary>
     public class AudioManager : MonoBehaviour
     {
         [SerializeField]
         private AudioData[] clips;
 
-
+        [SerializeField]
+        private string qTest = "happy&funny|!good";
 
         public static AudioManager Instance { get; private set; }
 
+        /// <summary>
+        /// System to Manage queries to the runtime audio dictionaries
+        /// </summary>
         public QueryManager QueryManager { get; private set; }
+        /// <summary>
+        /// Whether the AudioManager has completed it's initialisation (Uses Awake)
+        /// </summary>
         public bool IsSetUp { get; private set; }
 
         private void Awake()
@@ -23,12 +31,17 @@ namespace Audiomata
             }
             else
             {
-                Debug.LogError("2 Audiomata Runtime Managers present on this scene, this is a static-based class");
+                Debug.LogError("2 Audiomata Runtime Managers present on this scene, this is a Singleton Manager class");
                 Destroy(this);
                 return;
             }
             QueryManager = new QueryManager(clips);
             IsSetUp = true;
+            var testClip = QueryManager.QueryAudio(qTest);
+
+            Debug.Log(testClip.name);
+            
+
         }
 
         private void OnDestroy()
@@ -38,5 +51,8 @@ namespace Audiomata
                 Instance = null;
             }
         }
+
+        
+
     }
 }

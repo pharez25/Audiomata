@@ -6,9 +6,9 @@ namespace Audiomata
     /// </summary>
     public class AudioManager : MonoBehaviour
     {
+        [Tooltip("The more the clips, the slower the search. Only add clips here that are needed in the scene")]
         [SerializeField]
-        private AudioData[] clips;
-
+        public AudioData[] relevantClips;
         [SerializeField]
         private string qTest = "happy&funny|!good";
 
@@ -35,12 +35,19 @@ namespace Audiomata
                 Destroy(this);
                 return;
             }
-            QueryManager = new QueryManager(clips);
+
+            for (int i = 0; i < relevantClips.Length; i++)
+            {
+                AudioData next = relevantClips[i];
+
+                Debug.Log(next);
+            }
+
+            QueryManager = new QueryManager(relevantClips);
             IsSetUp = true;
             var testClip = QueryManager.QueryAudio(qTest);
-
             Debug.Log(testClip.name);
-            
+
 
         }
 
@@ -51,8 +58,5 @@ namespace Audiomata
                 Instance = null;
             }
         }
-
-        
-
     }
 }

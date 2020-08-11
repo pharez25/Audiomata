@@ -8,7 +8,7 @@ namespace Audiomata
     public static class AssetImporter
     {
         private static string dataDirectory = @"Assets\Audiomata\Generated Data\Track Metadata\";
-        private static string fileNamePrefix = "SampleData-";
+        public static string FileNamePrefix { get{return "SampleData-";} }
 
         public static AudioData[] GenerateAndLoadAllAudioData()
         {
@@ -42,26 +42,51 @@ namespace Audiomata
         /// </summary>
         public static void CleanAudioData()
         {
-            string[] audioDataPaths = Directory.GetFiles(Application.dataPath + @"\Audiomata\Generated Data\Track Metadata", "*.asset",SearchOption.TopDirectoryOnly);
+            string[] guids = AssetDatabase.FindAssets("t:AudioData");
 
-            for (int i = 0; i < audioDataPaths.Length; i++)
+            for (int i = 0; i < guids.Length; i++)
             {
-                string nextFullPath = audioDataPaths[i];
-                string fileName = Path.GetFileNameWithoutExtension(nextFullPath);
-                string audioClipGuid = nextFullPath.Substring(11);
+                string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+                AudioData next = AssetDatabase.LoadAssetAtPath<AudioData>(path);
 
-                if(AssetDatabase.GUIDToAssetPath(audioClipGuid) == null)
+                if (!next.clip)
                 {
-                    AssetDatabase.DeleteAsset(nextFullPath);
+                    AssetDatabase.DeleteAsset(path);
                 }
             }
+
+
+
+        }
+
+        public static AudioData[] LoadAllAudioData()
+        {
+            string[] guids = AssetDatabase.FindAssets("t:AudioData");
+            AudioData[] allAudioData = new AudioData[guids.Length];
+
+            for (int i = 0; i < guids.Length; i++)
+            {
+                string nextGuid = guids[i];
+
+                AudioData nextAudioData = AssetDatabase.LoadAssetAtPath<AudioData>(AssetDatabase.GUIDToAssetPath(nextGuid));
+                allAudioData[i] = nextAudioData;
+                
+            }
+
+            return allAudioData;
+
         }
 
         public static AudioData GetSampleData(string clipGuid) => AssetDatabase.LoadAssetAtPath<AudioData>(GetPath(clipGuid));
 
         public static bool MetaDataExists(string clipGuid) => AssetDatabase.LoadAssetAtPath<AudioData>(GetPath(clipGuid)) != null;
 
-        private static string GetPath(string clipGuid) => dataDirectory + fileNamePrefix + clipGuid + ".asset";
+        private static string GetPath(string clipGuid) => dataDirectory + FileNamePrefix + clipGuid + ".asset";
+
+        public static string SampleNameToGuid(string audioDataName)
+        {
+            return audioDataName.Substring(FileNamePrefix.Length - 1, FileNamePrefix.Length - audioDataName.Length);
+        }
 
         public static AudioData CreateMetaData(string clipGuid, string[] tags, AudioClip clip)
         {

@@ -11,7 +11,7 @@ namespace Audiomata
         SerializedProperty managerRefClips;
         List<AudioData> unAddedTracks;
         Vector2 sceneTrackLstScroll, unaddedTracksScroll;
-        bool showAddableTracks = false;
+        bool showAddableTracks = false, showCurrentRefs = false;
         GUIStyle scrollerStyle;
         private void OnEnable()
         {
@@ -41,79 +41,121 @@ namespace Audiomata
             }
         }
 
-
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
 
             //serializedObject.ApplyModifiedProperties();
+            GUILayout.Space(15);
 
-          //  return;
-            
-            EditorGUILayout.LabelField("Current Scene Track List");
-            sceneTrackLstScroll = EditorGUILayout.BeginScrollView(sceneTrackLstScroll,scrollerStyle, GUILayout.MaxHeight(150));
-
-            for (int i = 0; i < managerRefClips.arraySize; i++)
+            if (showCurrentRefs)
             {
-                SerializedProperty audioProp = managerRefClips.GetArrayElementAtIndex(i);
-                Object next = audioProp.objectReferenceValue;
-                AudioData nextAD = (AudioData)next;
-                if (!nextAD)
-                {
-                    managerRefClips.DeleteArrayElementAtIndex(i);
-                    continue;
-                }
                 EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField(nextAD.clip.name);
+                EditorGUILayout.LabelField("Current Scene Track List");
 
-                if (GUILayout.Button("X"))
+                if(GUILayout.Button("Hide Scene References"))
                 {
-                    managerRefClips.DeleteArrayElementAtIndex(i);
-                    RefreshTracksToAddList();
-                    
-                    
+                    showCurrentRefs = false;
                 }
-                EditorGUILayout.EndHorizontal();
-            }
 
-            EditorGUILayout.EndScrollView();
+                EditorGUILayout.EndHorizontal();
+
+               
+
+                if (managerRefClips.arraySize> 0)
+                {
+                    sceneTrackLstScroll = EditorGUILayout.BeginScrollView(sceneTrackLstScroll, scrollerStyle, GUILayout.MaxHeight(150));
+                    for (int i = 0; i < managerRefClips.arraySize; i++)
+                    {
+                        SerializedProperty audioProp = managerRefClips.GetArrayElementAtIndex(i);
+                        Object next = audioProp.objectReferenceValue;
+                        AudioData nextAD = (AudioData)next;
+                        if (!nextAD)
+                        {
+                            managerRefClips.DeleteArrayElementAtIndex(i);
+                            continue;
+                        }
+                        EditorGUILayout.BeginHorizontal();
+                        EditorGUILayout.LabelField(nextAD.clip.name);
+
+                        if (GUILayout.Button("Remove Track"))
+                        {
+                            managerRefClips.DeleteArrayElementAtIndex(i);
+                            RefreshTracksToAddList();
+
+                        }
+                        EditorGUILayout.EndHorizontal();
+                    }
+
+                    EditorGUILayout.EndScrollView();
+                }
+                else
+                {
+                    EditorGUILayout.Space(30);
+                    EditorGUILayout.LabelField("(Empty)");
+                    EditorGUILayout.Space(30);
+                }
+                
+            }
+            else
+            {
+                if(GUILayout.Button("Show Scene Track References"))
+                {
+                    showCurrentRefs = true;
+                }
+            }
+            //  return;
+            
             GUILayout.Space(40);
             if (showAddableTracks)
             {
+                EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField("Add Tracks Menu");
-                unaddedTracksScroll = EditorGUILayout.BeginScrollView(unaddedTracksScroll,scrollerStyle, GUILayout.MaxHeight(150));
-
-                for (int i = unAddedTracks.Count-1; i >-1 ; i--)
-                {
-                    AudioData next = unAddedTracks[i];
-                    if (!next)
-                    {
-                        continue;
-                    }
-                    EditorGUILayout.BeginHorizontal();
-
-                    if (GUILayout.Button(next.clip.name))
-                    {
-                        unAddedTracks.Remove(next);
-                        managerRefClips.InsertArrayElementAtIndex(managerRefClips.arraySize);
-                        managerRefClips.GetArrayElementAtIndex(managerRefClips.arraySize - 1).objectReferenceValue = (Object)next;
-                        RefreshTracksToAddList();
-                    }
-
-                    EditorGUILayout.EndHorizontal();
-                   
-                }
-                EditorGUILayout.EndScrollView();
-
                 if (GUILayout.Button("Hide Add Track Menu"))
                 {
                     showAddableTracks = false;
                 }
+                EditorGUILayout.EndHorizontal();
+
+                if (unAddedTracks.Count > 0)
+                {
+                    unaddedTracksScroll = EditorGUILayout.BeginScrollView(unaddedTracksScroll, scrollerStyle, GUILayout.MaxHeight(150));
+
+                    for (int i = unAddedTracks.Count - 1; i > -1; i--)
+                    {
+                        AudioData next = unAddedTracks[i];
+                        if (!next)
+                        {
+                            continue;
+                        }
+                        EditorGUILayout.BeginHorizontal();
+
+                        if (GUILayout.Button(next.clip.name))
+                        {
+                            unAddedTracks.Remove(next);
+                            managerRefClips.InsertArrayElementAtIndex(managerRefClips.arraySize);
+                            managerRefClips.GetArrayElementAtIndex(managerRefClips.arraySize - 1).objectReferenceValue = (Object)next;
+                            RefreshTracksToAddList();
+                        }
+
+                        EditorGUILayout.EndHorizontal();
+
+                    }
+                    EditorGUILayout.EndScrollView();
+                }
+                else
+                {
+                    EditorGUILayout.Space(30);
+                    EditorGUILayout.LabelField("(Empty)");
+                    EditorGUILayout.Space(30);
+                }
+               
             }
             else if(GUILayout.Button("Show Add Track Menu"))
             {
                 showAddableTracks = true;
             }
+            GUILayout.Space(15);
 
             serializedObject.ApplyModifiedProperties();
         }

@@ -13,7 +13,7 @@ namespace Audiomata
 
         private const char noOpChar = '~';
 
-        public QueryManager(AudioData[] audioData)
+        public QueryManager(AudioData[] audioData, bool queryWarnings = true)
         {
             tagsToGuidsDict = new Dictionary<string, List<string>>();
             guidToClipDict = new Dictionary<string, AudioClip>();
@@ -84,6 +84,8 @@ namespace Audiomata
                 Debug.LogError("Querier Failed to find operators");
                 return null;
             }
+            Debug.Log(nextTag);
+
             IEnumerable<string> currentSet;
 
             string[] tmpGuids = new string[guidToClipDict.Count];
@@ -94,7 +96,7 @@ namespace Audiomata
             for (int i = lastStopIdx; i < query.Length; i++)
             {
                 nextTag = GetNextTag(query, out currentOp, out i, i);
-
+                Debug.Log(nextTag);
                 if(nextTag == null)
                 {
                     break;
@@ -112,6 +114,8 @@ namespace Audiomata
             }
             return null;
         }
+
+        
 
         private string GetNextTag(string query, out char nextOpChar, out int stoppageIdx, int startIdx = 0)
         {
@@ -164,20 +168,45 @@ namespace Audiomata
         //ops where done this way to allow very easy expansion where necessary. Arguably would be more efficient to use a swith statement
         private void OrLstSet(ref IEnumerable<string> currentSet, string targetTag)
         {
-            currentSet.Union(tagsToGuidsDict[targetTag]);
-          
+            List<string> tags;
+
+            if (tagsToGuidsDict.TryGetValue(targetTag, out tags))
+            {
+                currentSet =  currentSet.Union(tagsToGuidsDict[targetTag]);
+            }
+            else
+            {
+                Debug.LogWarning("Could not perform an OR ('|') step due to tag not being present");
+            }
         }
 
         private void AndLstSet(ref IEnumerable<string> currentSet, string targetTag)
         {
-            List<string> secondTagLst = tagsToGuidsDict[targetTag];
+            List<string> tags = tagsToGuidsDict[targetTag];
 
-            currentSet.Where(t1 => secondTagLst.Contains(t1));
+            if(tagsToGuidsDict.TryGetValue(targetTag, out tags))
+            {
+                currentSet = currentSet.Where(t1 => tags.Contains(t1));
+            }
+            else
+            {
+                Debug.LogWarning("Could not perform an AND ('&') step due to the tags not being present");
+            }
+          
         }
 
         private void NotLstSet(ref IEnumerable<string> currentSet, string targetTag)
         {
-            currentSet.Except(tagsToGuidsDict[targetTag]);
+            List<string> tags;
+
+            if(tagsToGuidsDict.TryGetValue(targetTag, out tags))
+            {
+                currentSet = currentSet.Except(tagsToGuidsDict[targetTag]);
+            }
+            else
+            {
+                Debug.LogWarning("! did not return a taglist");
+            }
         }
     }
 }

@@ -244,7 +244,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 370fa3dfd115c0449b770a09b1062438, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  clips: []
+  relevantClips: []
+  qTest: happy&funny|!good
 --- !u!81 &1624766948
 AudioListener:
   m_ObjectHideFlags: 0

@@ -16,14 +16,26 @@ namespace Audiomata
         private Dictionary<string, AudioClip> guidToClipDict;
         private Dictionary<char, OP> queryOpDict;
         private Regex opRegex;
-
         private const char noOpChar = '\0';
+
+        private readonly List<string> allGuids;
+
+        //done to make a "readonly" acessor
+
+
+        /// <summary>
+        /// An Operation to be done with the query manager
+        /// </summary>
+        /// <param name="guidSetLeft"> the current result of all previous operations, modify this to apply ops </param>
+        /// <param name="guidSetRight">the results of a dicionary tag query to the right hand side of operator of ids</string></param>
+        /// <remarks>All IEnumerables are of type List<string>, a change of type can cause unintended faults</remarks>       
+        public delegate IEnumerable<string> QueryOperation(IEnumerable<string> guidSetLeft, IEnumerable<string> guidSetRight, QueryManager qmInstance = null);
 
         /// <summary>
         /// Creates an instance of a class that can query tags with in buil or custom operations
         /// </summary>
         /// <param name="audioData">an array of all audio data that can be queried</param>
-        /// <param name="customOperators">A dictionary of all custom ops</param>
+        /// <param name="customOperators">A dictionary of custom Operators</param>
         /// <param name="overwriteDictionary">Whether in built operations should be overrided </param>
         /// <remarks>If replace operations is true, the dictionary will be completely replaced set false for merge</remarks>
 
@@ -59,6 +71,7 @@ namespace Audiomata
                 }
 
             }
+            allGuids = new List<string>(guidToClipDict.Keys);
 
             if (customOperators != null)
             {
@@ -91,7 +104,7 @@ namespace Audiomata
 
         private void BuildDefaultOPs()
         {
-            OP and, or, not;
+            OP and, or, not, rand, xor, contains;
 
             and = new OP()
             {
@@ -114,11 +127,27 @@ namespace Audiomata
                 opType = OpType.Prefix
             };
 
+            xor = new OP
+            {
+                opFunction = XorLstSet,
+                opSymbol = '^',
+                opType = OpType.Postfix
+            };
+
+            rand = new OP()
+            {
+                opFunction = SingleRandSelection,
+                opSymbol = '?',
+                opType = OpType.Prefix
+            };
+
             queryOpDict = new Dictionary<char, OP>()
                     {
-                        { '&', and},
-                        {'|',or },
-                        {'!',not }
+                        {and.opSymbol, and},
+                        {or.opSymbol,or },
+                        {not.opSymbol,not },
+                        {xor.opSymbol,xor },
+                        { rand.opSymbol,rand}
                     };
         }
 
@@ -138,15 +167,6 @@ namespace Audiomata
         public AudioClip GetTrackById(string id) => guidToClipDict[id];
 
         /// <summary>
-        /// An Operation to be done with the query manager
-        /// </summary>
-        /// <param name="currentSet"> the current result of all previous operations, modify this to apply ops </param>
-        /// <param name="targetTag">the results of a dicionary tag query to the right hand side of operator of ids</string></param>
-        /// <remarks>All IEnumerables are of type List<string>, a change of type can cause unintended faults</remarks>        
-
-        public delegate void QueryOperation(ref IEnumerable<string> currentSet, IEnumerable<string> targetTag);
-
-        /// <summary>
         /// Queries all the tags and returns a random audioclip from the filtered set
         /// </summary>
         /// <param name="query">string to query, follows c# syntax e.g. "example|!Unity&Audiomata", all ops are single chars </param>
@@ -159,103 +179,109 @@ namespace Audiomata
                 Debug.LogError("Query was empty");
                 return null;
             }
-            
-            IEnumerable<string> currentQueryCumlation = new List<string>(tagsToGuidsDict.Keys);
-            MatchCollection opMatches = opRegex.Matches(query);
 
-            string selectedGuid;
+            IEnumerable<string> currentGuidSet = null;
+            MatchCollection opMatches = opRegex.Matches(query);
 
             if (opMatches.Count > 0)
             {
                 //predicate allows chained prefixes where usable e.g.(although not techincally workable) !!tag
                 Queue<string> tagsInQuery = new Queue<string>(opRegex.Split(query).Where(tag => !string.IsNullOrEmpty(tag)));
-                string previousTag;
                 string nextTag = tagsInQuery.Dequeue();
-
                 for (int i = 0; i < opMatches.Count; i++)
                 {
-                    Match nextMatch = opMatches[i];
-                    
-                    OP nextOp = queryOpDict[nextMatch.Value[0]];
-
-                    switch (nextOp.opType)
-                    {
-
-                        case OpType.Postfix:
-                            previousTag = nextTag;
-                            //all postfix operators  must be between 2 tags
-                            // 2 tags are the only reason why tags can be dequed
-                            nextTag = tagsInQuery.Dequeue();
-
-                            if(i == 0)
-                            {
-                                currentQueryCumlation = tagsToGuidsDict[previousTag];
-                            }
-                            else
-                            {
-                                while (opMatches.Count - i > 1 && tagsInQuery.Count > 0)
-                                {
-                                    OP lookAheadOp = queryOpDict[opMatches[i + 1].Value[0]];
-
-                                    if(lookAheadOp.opType == OpType.Prefix)
-                                    {
-                                        IEnumerable<string> prefIxResults = new List<string>(guidToClipDict.Keys);
-                                         
-                                        lookAheadOp.opSymbol()
-
-                                        i++;
-                                    }
-                                    else break;
-                                }
-                            }
-
-                            nextOp.opFunction(ref currentQueryCumlation, tagsToGuidsDict[nextTag]);
-                            break;
-
-                        case OpType.Prefix:
-                            nextOp.opFunction(ref currentQueryCumlation, tagsToGuidsDict[nextTag]);
-                            break;
-
-                        case OpType.Group:
-                            throw new System.NotImplementedException("The group feature, including brackets \"()\" has not yet been completed!");
-                            break;
-
-                        default:
-                            throw new System.InvalidOperationException("Optype not recognised: "+nextOp.opType.ToString());
-
-
-                    }
+                    Match nextOpMatch = opMatches[i];
+                    OP nextOp = queryOpDict[nextOpMatch.Value[0]];
+                    currentGuidSet = DoOperation(nextOp, opMatches, tagsInQuery, currentGuidSet, ref nextTag, query, ref i);
                 }
-                    
             }
             else //assumes there is just one tag 
             {
-                Debug.LogWarning("Should only use QueryAudio where multiple tags are involved");
-
-                if (tagsToGuidsDict.TryGetValue(query, out List<string> guidList))
-                {
-                    if (guidList.Count > 0)
-                    {
-                        selectedGuid = guidList[Random.Range(0, guidList.Count)];
-
-                        return guidToClipDict[selectedGuid];
-                    }
-                    else return null;
-
-                }
-                else return null;
+                Debug.LogWarning("Should only use QueryManager.QueryAudio for single tag queries, it will call there instead anyway!");
+                return GetClipByTag(query);
             }
 
-            if (currentQueryCumlation.Count() < 1)
+            if (currentGuidSet == null)
             {
-                Debug.LogWarning("query: \"" + query + "\" did not return results");
+                return null;
+            }
+            if (currentGuidSet.Count() < 1)
+            {
                 return null;
             }
 
-            List<string> validGuids = currentQueryCumlation.ToList();
-            selectedGuid = validGuids[Random.Range(0, validGuids.Count)];
-
+            List<string> queryResultLst = currentGuidSet.ToList();
+            Debug.Log(queryResultLst.Count);
+            if (queryResultLst.Count < 1)
+            {
+                return null;
+            }
+            string selectedGuid = queryResultLst[Random.Range(0, queryResultLst.Count)];
             return guidToClipDict[selectedGuid];
+        }
+
+        public void QueryAudio(string query, out IEnumerable<string> result)
+        {
+            throw new System.NotImplementedException("IEnumerator also not done");
+        }
+
+        public IEnumerable<string> DoOperation(OP op, MatchCollection allMatches, Queue<string> tagQ, IEnumerable<string> currentResults, ref string currentTag, string q, ref int matchIdx, int bracketDepth = 0)
+        {
+            if (currentResults == null)
+            {
+                currentResults = new List<string>(tagsToGuidsDict[currentTag]);
+            }
+            IEnumerable<string> rhsTaggedList;
+            switch (op.opType)
+            {
+                //this case should only be entered when prefix is used first
+                case OpType.Prefix:
+                    rhsTaggedList = tagsToGuidsDict[currentTag];
+                    currentResults = op.opFunction(currentResults, rhsTaggedList, this);
+                    break;
+
+
+                case OpType.Postfix:
+                    //check and execute prefixes before continuing
+                    string rightTag = tagQ.Dequeue();
+                    Debug.Log(rightTag);
+                    rhsTaggedList = tagsToGuidsDict[rightTag];
+                    int lookAheadOpIdx = matchIdx + 1;
+                    if (lookAheadOpIdx >= allMatches.Count)
+                    {
+                        rhsTaggedList = op.opFunction(currentResults, rhsTaggedList, this);
+                        break;
+                    }
+                    OP lookAheadOp = queryOpDict[allMatches[lookAheadOpIdx].Value[0]];
+                    if (lookAheadOp.opType != OpType.Prefix)
+                    {
+                        break;
+                    }
+                    do
+                    {
+                        rhsTaggedList = lookAheadOp.opFunction(currentResults, rhsTaggedList, this);
+                        lookAheadOpIdx++;
+                        if (lookAheadOpIdx >= allMatches.Count)
+                        {
+                            break;
+                        }
+                        lookAheadOp = queryOpDict[allMatches[lookAheadOpIdx].Value[0]];
+                    } while (lookAheadOp.opType == OpType.Prefix);
+
+                    matchIdx = lookAheadOpIdx + 1;
+                    currentResults = op.opFunction(currentResults, rhsTaggedList, this);
+                    break;
+
+
+                case OpType.Group:
+                    break;
+
+
+                default:
+                    Debug.LogError("Operation Failed, unknown optype. If this a customisation please update this class");
+                    return null;
+            }
+            return currentResults;
         }
 
         /// <summary>
@@ -286,7 +312,7 @@ namespace Audiomata
                 {
                     return opSymbol.ToString();
                 }
-                else return opSymbol  opEnder;
+                else return "" + opSymbol + opEnder;
             }
         }
 
@@ -306,6 +332,7 @@ namespace Audiomata
             /// <summary>
             /// As a seperator between multiple tags e.g. [example&other]&something-else
             /// </summary>
+            /// <remarks>Does the operations within first then returns the values, this may change in the future</remarks>
             Group
         }
 
@@ -356,28 +383,56 @@ namespace Audiomata
             return true;
         }
 
-        private void OrLstSet(ref IEnumerable<string> currentSet, IEnumerable<string> nextTagResult)
+        private IEnumerable<string> OrLstSet(IEnumerable<string> guidSetLeft, IEnumerable<string> guidSetRight, QueryManager qm)
         {
-            currentSet = currentSet.Union(nextTagResult);
+            return guidSetLeft.Union(guidSetRight);
         }
 
-        private void AndLstSet(ref IEnumerable<string> currentSet, IEnumerable<string> nextTagResult)
+        private IEnumerable<string> XorLstSet(IEnumerable<string> guidSetLeft, IEnumerable<string> guidSetRight, QueryManager qm)
         {
-            currentSet = currentSet.Intersect(nextTagResult);
+            return guidSetLeft.Except(guidSetRight);
         }
 
-        private void NotLstSet(ref IEnumerable<string> currentSet, IEnumerable<string> nextTagResult)
+        private IEnumerable<string> AndLstSet(IEnumerable<string> guidSetLeft, IEnumerable<string> guidSetRight, QueryManager qm)
         {
-            currentSet = currentSet.Except(nextTagResult);
+            return guidSetLeft.Intersect(guidSetRight);
         }
 
-        private void SingleRandSelection(ref IEnumerable<string> currentSet, IEnumerable<string> nextTagResult = null)
+        private IEnumerable<string> NotLstSet(IEnumerable<string> guidSetLeft, IEnumerable<string> guidSetRight, QueryManager qm)
         {
-            if (currentSet.Count() > 0)
+            IEnumerable<string> outQuery = qm.AllGuids.Except(guidSetRight); ;
+            var tmpLst = outQuery.ToList();
+
+            return outQuery;
+        }
+
+        private IEnumerable<string> SingleRandSelection(IEnumerable<string> guidSetLeft, IEnumerable<string> guidSetRight, QueryManager qm)
+        {
+
+            if (guidSetLeft.Count() > 0)
             {
-                List<string> setToList = currentSet.ToList();
-                currentSet = new List<string>() { setToList[Random.Range(0, setToList.Count)] };
+                List<string> setToList = guidSetLeft.ToList();
+                return new List<string>() { setToList[Random.Range(0, setToList.Count)] };
+            }
+            else
+            {
+                return new List<string>();
+            }
+        }
+
+        private IEnumerable<string> Bracket(IEnumerable<string> guidSetLeft, IEnumerable<string> guidSetRight, QueryManager qm)
+        {
+            //this is done to action the queries that have occured between them, may be possible to just do nothing
+            return guidSetLeft.ToList();
+        }
+
+        public IEnumerable<string> AllGuids
+        {
+            get
+            {
+                return allGuids;
             }
         }
     }
+
 }

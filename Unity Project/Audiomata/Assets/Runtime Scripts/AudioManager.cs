@@ -6,10 +6,10 @@ namespace Audiomata
     /// </summary>
     public class AudioManager : MonoBehaviour
     {
-        [Tooltip("The more the clips, the slower the search. Only add clips here that are needed in the scene")]
+        [Tooltip("The more the clips, the slower the search O(n). Only add clips here that are needed in the scene")]
         [SerializeField]
         public AudioData[] relevantClips;
-        [SerializeField]
+
         private string qTest = "happy&funny|!good";
 
         public static AudioManager Instance { get; private set; }
@@ -40,7 +40,7 @@ namespace Audiomata
             {
                 AudioData next = relevantClips[i];
 
-                Debug.Log(next);
+             //   Debug.Log(next);
             }
 
             QueryManager = new QueryManager(relevantClips);

@@ -31,6 +31,7 @@ namespace Audiomata
             AudioData[] all = AssetImporter.LoadAllAudioData();
             unAddedTracks = new List<AudioData>();
             unAddedTracks.AddRange(AssetImporter.LoadAllAudioData());
+            unAddedTracks.Sort((a, b) =>  string.Compare(b.clip.name, a.clip.name));
             int refArrySize = managerRefClips.arraySize;
 
             for (int i = 0; i < managerRefClips.arraySize; i++)

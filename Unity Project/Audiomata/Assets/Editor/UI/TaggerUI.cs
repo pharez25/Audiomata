@@ -13,10 +13,10 @@ namespace Audiomata
 
         VisualTreeAsset tagElement;
 
+        List<string> allTags;
+
         string clipSelection = null;
         Dictionary<string, AudioData> audioDataDict;
-
-        List<string> allTags;
 
         [MenuItem("Window/Audiomata/Tagger")]
         public static void ShowExample()
@@ -29,7 +29,8 @@ namespace Audiomata
         {
             // Each editor window contains a root VisualElement object
             root = rootVisualElement;
-
+            audioDataDict = new Dictionary<string, AudioData>();
+            allTags = new List<string>();
 
             // VisualElements objects can contain other VisualElement following a tree hierarchy.
 
@@ -64,23 +65,23 @@ namespace Audiomata
                 Debug.LogError("Audiomata:Tag style sheet missing, Fixed path: Assets/StyleSheets/Tag.uss ");
             }
             CleanMetaData();
-            RefreshAudioList();
-            AllTagUIRefresh();
+            FullRefresh();
 
             Button addTag = root.Query<Button>("addTagBtn");
             addTag.clickable.clicked += AddTagFromTxtBx;
 
             Button refreshButton = root.Query<Button>("refreshBtn");
-            refreshButton.clickable.clicked += Refresh;
+            refreshButton.clickable.clicked += FullRefresh;
 
             Button cleanButton = root.Query<Button>("cleanBtn");
             cleanButton.clickable.clicked += () => CleanMetaData(true);
         }
 
-        private void Refresh()
+        private void FullRefresh()
         {
             RefreshAudioList();
             RefreshTagList();
+            QuickAddTagUIRefresh();
         }
 
         private void CleanMetaData(bool withRefresh = false)
@@ -88,9 +89,7 @@ namespace Audiomata
             AssetImporter.CleanAudioData();
             if (withRefresh)
             {
-                RefreshAudioList();
-                AllTagUIRefresh();
-                RefreshTagList();
+                FullRefresh();
             }
         }
 
@@ -110,14 +109,9 @@ namespace Audiomata
                 AudioData audioData = audioDataDict[clipSelection];
 
                 audioData.tags.Add(tag);
+                AddTagToQuickAdd(tag, root.Query<ScrollView>("recentTags"));
 
                 EditorUtility.SetDirty(audioData);
-
-                if (!allTags.Contains(tag))
-                {
-                    allTags.Add(tag);
-                    allTags.Sort();
-                }
 
                 RefreshTagList();
 
@@ -131,7 +125,7 @@ namespace Audiomata
             }
         }
 
-        private void AllTagUIRefresh()
+        private void QuickAddTagUIRefresh()
         {
             ScrollView recentTagRegion = root.Query<ScrollView>("recentTags");
 
@@ -139,21 +133,37 @@ namespace Audiomata
             {
                 recentTagRegion.RemoveAt(i);
             }
+            allTags.Clear();
 
-            for (int i = 0; i < allTags.Count; i++)
+            foreach (var kvp in audioDataDict)
             {
-                string nextTag = allTags[i];
+                List<string> nextTagSet = kvp.Value.tags;
 
-                Button tagButton = new Button();
-                tagButton.style.maxWidth = 280;
-                tagButton.style.minWidth = 120;
-                tagButton.style.height = 20;
-                tagButton.text = nextTag;
-                tagButton.clickable.clickedWithEventInfo += AddTagByRecents;
-                recentTagRegion.Add(tagButton);
+                foreach (string tag in nextTagSet)
+                {
+                    AddTagToQuickAdd(tag, recentTagRegion);
+                }
             }
-
         }
+
+        private Button AddTagToQuickAdd(string tag, ScrollView recentTagRegion)
+        {
+            if (allTags.Contains(tag))
+            {
+                return null;
+            }
+            allTags.Add(tag);
+            Button tagButton = new Button();
+            tagButton.style.maxWidth = 280;
+            tagButton.style.minWidth = 120;
+            tagButton.style.height = 20;
+            tagButton.text = tag;
+            tagButton.clickable.clickedWithEventInfo += AddTagByRecents;
+            recentTagRegion.Add(tagButton);
+
+            return tagButton;
+        }
+
 
         private void AddTagByRecents(EventBase btn)
         {
@@ -167,7 +177,7 @@ namespace Audiomata
             List<string> targetTags = audioDataDict[clipSelection].tags;
             if (targetTags.Contains(tag))
             {
-                EditorUtility.DisplayDialog("Tag Already Added", "This tag is already on the selected clip","OK");
+                EditorUtility.DisplayDialog("Tag Already Added", "This tag is already on the selected clip", "OK");
                 return;
             }
             targetTags.Add(tag);
@@ -182,8 +192,8 @@ namespace Audiomata
             {
                 clipScroll.RemoveAt(i);
             }
-            audioDataDict = new Dictionary<string, AudioData>();
-            allTags = new List<string>();
+
+            audioDataDict.Clear();
             AudioData[] allAudio = AssetImporter.GenerateAndLoadAllAudioData();
 
             for (int i = 0; i < allAudio.Length; i++)
@@ -199,21 +209,9 @@ namespace Audiomata
                 clipSelector.text = nextTrack.clip.name;
                 clipSelector.tooltip = AssetDatabase.GUIDToAssetPath(nextTrack.guid);
                 clipScroll.Add(clipSelector);
-
-                //add uniqueTags
-                List<string> clipTags = nextTrack.tags;
-
-                for (int j = 0; j < clipTags.Count; j++)
-                {
-                    string nextTag = clipTags[j];
-                    if (!allTags.Contains(nextTag))
-                    {
-                        allTags.Add(nextTag);
-                    }
-                }
             }
 
-            allTags.Sort();
+            QuickAddTagUIRefresh();
         }
 
         private void RefreshTagList()

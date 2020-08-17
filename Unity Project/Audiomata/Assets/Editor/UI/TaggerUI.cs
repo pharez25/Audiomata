@@ -164,7 +164,6 @@ namespace Audiomata
             return tagButton;
         }
 
-
         private void AddTagByRecents(EventBase btn)
         {
             if (clipSelection == null)
@@ -228,8 +227,15 @@ namespace Audiomata
                 tagScroll.RemoveAt(i);
             }
 
-            List<string> targetTags = audioDataDict[clipSelection].tags;
+            AudioData audioData;
 
+            if (!audioDataDict.TryGetValue(clipSelection, out audioData))
+            {
+                //this can occur during editor recompiling and building
+                return;
+            }
+
+            List<string> targetTags = audioData.tags;
 
             if (targetTags.Count == 0)
             {
@@ -347,5 +353,6 @@ namespace Audiomata
             }
             RefreshTagList();
         }
+        
     }
 }

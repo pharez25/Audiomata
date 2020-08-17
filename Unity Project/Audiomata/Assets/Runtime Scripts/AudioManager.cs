@@ -10,7 +10,7 @@ namespace Audiomata
         [SerializeField]
         public AudioData[] relevantClips;
 
-        private string qTest = "happy&funny|!good";
+        private string qTest = "(great&!good)|!?happy&funny";
 
         public static AudioManager Instance { get; private set; }
 
@@ -45,9 +45,13 @@ namespace Audiomata
 
             QueryManager = new QueryManager(relevantClips);
             IsSetUp = true;
-            var testClip = QueryManager.QueryAudio(qTest);
-            Debug.Log(testClip.name);
-
+            QueryManager.QueryAudio(qTest, out var results);
+            Debug.Log("Full Query Results: ");
+            foreach (var result in results)
+            {
+                Debug.Log(result);
+            }
+            Debug.Log("Results End");
 
         }
 

@@ -10,7 +10,7 @@ namespace Audiomata
         [SerializeField]
         public AudioData[] relevantClips;
 
-        private string qTest = "(great&!good)|!?happy&funny";
+        private string qTest = "!bird|B&!A";
 
         public static AudioManager Instance { get; private set; }
 

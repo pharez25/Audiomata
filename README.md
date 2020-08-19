@@ -44,3 +44,37 @@ Where the audio is not credited, it is my audio. The credits below are sources o
 # This software (only) upon publication (from when it is publically listed) on Github is under the CC0 1 Universal license, this means that copyright has been wavered and the software is free to use in virtually any ethical manner both commercial and non commercial without attribution. For more information [click here](https://creativecommons.org/publicdomain/zero/1.0/?ref=chooser-v1).
 
 The sound in this project is for demoing as it has been put together very quickly by a software engineer, not an audio technician. **Some of the sounds and all other non-software assets are third party and as such, may fall under different licenses I advise that the links are used with due dilligence (check the licenses on the respective sites dummy) before adding them into your own project and you do not do so without permission of respective authors**. This sound assets authored by me are also under CC0 1, they are cleary indicated with the "Contributing artists" metedata on the files. Also, they are pretty bad so I can't actually see a reason to use them but eh, you do you.
+
+System Instructions (and Quirks):
+Essentially you:
+-Give audio clips tags and search for them using c#-like syntax 
+-Make events that can modify any audio component
+- Use Unity's Snapshots as well if you feel like it
+- Reverse any effect on any system. Note that it will not be able to revert backwards so a clip being modified by a channel effect cannot be unmofied on the clip, you must unmodify the channel
+- Query tags in game (really slow) or pre query the, out side (As fast as can be).
+
+The workflow is normally going to be like this:
+Add as many tracks as you like to assets.
+Then go on to fix 
+
+Note that the operators go left to right. Queries can be any length, but they will take longer, each one is like going through the whole list once. You can add custom operations and incorrect queries will crash (using dictionaries and thought people might wanna catch it themselves). A query has the following rule:
+-any number of prefix operations (e.g. NOT).
+-one postfix operation must be inbetween 2 tags. 
+- brackets are good.
+- nested brackets are good as well.
+- the tag must exist in the current instance to work, even with NOT.
+
+
+Tags have the following rules:
+- Cannot have spaces on either side nor double spaces in the middle (these are removed automatically).
+- Only numbers, letters, underscores and spaces are allowed.
+- can have any valid character from 1 length.
+
+Operations (Yup you can use Linq to add your own and it was not very nice to program but I made it easy for you : ) ):
+- the operations under the hood use lists of guids (basically ID strings for each track), 
+- Prefix only get parsed the rhs as they are meant for single tag set operations the same applies to brackets as they don't implicityl have another side
+- Postfix is for 2 tags and cannot be used in any other way but in between them
+- A group will do everything between it's start and it's end character, then it will perform it's own operation after wards and return.
+- Operation Prescedence goes groups>prefix>postfix and from right to left of the string.
+ you get parsed in by default the lhs (except for prefix) set of tags, the right hand side set of tags and the instance to the qm that called the operation
+- where an operation cannot be done or yields no results returning an empty list of strings is the most stable solution. **Null may cause a crash**.

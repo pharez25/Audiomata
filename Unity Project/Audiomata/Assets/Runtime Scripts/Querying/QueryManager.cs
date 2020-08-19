@@ -133,7 +133,7 @@ namespace Audiomata
                 opDelegate = Bracket,
                 opSymbol = '(',
                 opEnder = ')',
-                opType = OpType.Group
+                opType = OpType.CaptureGroup
             };
 
             queryOpDict = new Dictionary<char, Op>()
@@ -179,34 +179,33 @@ namespace Audiomata
                 return null;
             }
 
-            IEnumerable<string> currentGuidSet = null;
+            IEnumerable<string> resultGuidList = null;
             MatchCollection opMatches = opRegex.Matches(query);
 
             if (opMatches.Count > 0)
             {
-                //predicate allows chained prefixes where usable e.g.(although not techincally workable) !!tag
-                Queue<string> tagsInQuery = new Queue<string>(opRegex.Split(query).Where(tag => !string.IsNullOrEmpty(tag)));
-                currentGuidSet = PerformOps(opMatches, tagsInQuery, query);
+
+                resultGuidList = PerformOps(query, opMatches);
             }
             else //assumes there is just one tag if there are no ops 
             {
-                Debug.LogWarning("\"" + query + "\" may have invalid operators as none were detectedm if just one tag was required, use GetClipByTag");
+                Debug.LogWarning("\"" + query + "\" may have invalid operators as none were detected if just one tag was required, use GetClipByTag");
                 return GetClipByTag(query);
             }
 
-            if (currentGuidSet == null)
+            if (resultGuidList == null)
             {
                 return null;
             }
-            if (currentGuidSet.Count() < 1)
+            if (resultGuidList.Count() < 1)
             {
                 return null;
             }
 
-            List<string> queryResultLst = currentGuidSet.ToList();
-            Debug.Log(queryResultLst.Count);
+            List<string> queryResultLst = resultGuidList.ToList();
             if (queryResultLst.Count < 1)
             {
+                Debug.LogWarning("query: \"" + query + "\", returned no results");
                 return null;
             }
             string selectedGuid = queryResultLst[Random.Range(0, queryResultLst.Count)];
@@ -228,9 +227,7 @@ namespace Audiomata
 
             if (opMatches.Count > 0)
             {
-                //predicate allows chained prefixes where usable e.g.(although not techincally workable) !!tag
-                Queue<string> tagsInQuery = new Queue<string>(opRegex.Split(query).Where(tag => !string.IsNullOrEmpty(tag)));
-                currentGuidSet = PerformOps(opMatches, tagsInQuery, query);
+                currentGuidSet = PerformOps(query, opMatches);
             }
             else //assumes there is just one tag if there are no ops 
             {
@@ -239,7 +236,6 @@ namespace Audiomata
                 if (tagsToGuidsDict.TryGetValue(query, out guids))
                 {
                     resultTarget = new AudioClip[guids.Count];
-
                     for (int i = 0; i < guids.Count; i++)
                     {
                         resultTarget[i] = guidToClipDict[guids[i]];
@@ -247,24 +243,28 @@ namespace Audiomata
                 }
                 else
                 {
-                    resultTarget = null;
+                    resultTarget = new AudioClip[0];
                     return;
                 }
 
             }
 
-            if (currentGuidSet == null)
+            List<string> searchResults = currentGuidSet.ToList();
+
+            if (searchResults == null)
             {
+                Debug.LogWarning("query: \"" + query + "\", returned no results");
                 resultTarget = null;
                 return;
             }
-            if (currentGuidSet.Count() < 1)
+            if (searchResults.Count < 1)
             {
-                resultTarget = null;
+                Debug.LogWarning("query: \"" + query + "\", returned no results");
+                resultTarget = new AudioClip[0];
                 return;
             }
 
-            List<string> searchResults = currentGuidSet.ToList();
+           
             resultTarget = new AudioClip[searchResults.Count];
             for (int i = 0; i < searchResults.Count; i++)
             {
@@ -273,173 +273,192 @@ namespace Audiomata
 
         }
 
-        private IEnumerable<string> PerformOps(MatchCollection matches, Queue<string> tagQ, string query)
+        private IEnumerable<string> PerformOps(string query, MatchCollection opMatches)
         {
-            string currentTag = tagQ.Dequeue();
+            string[] tags = opRegex.Split(query).Where(q => !string.IsNullOrEmpty(q)).ToArray();
+
+            IEnumerable<string> lhs = null;
+            IEnumerable<string> rhs = null;
+
+            Stack<string> tagStk = new Stack<string>(tags);
+            Stack<Match> opStack = new Stack<Match>();
+
+            for (int i = 0; i < opMatches.Count; i++)
+            {
+                opStack.Push(opMatches[i]);
+
+            }
+
+            string currentTag = tagStk.Pop();
+            rhs = tagsToGuidsDict[currentTag];
+
+            do
+            {
+                Op nextOp = PopToOp(opStack, out Match nextMatch);
+                switch (nextOp.opType)
+                {
+                    case OpType.Prefix:
+                        rhs = nextOp.opDelegate(null, rhs, this);
+                        continue;
+
+                    case OpType.Postfix:
+                        
+                        lhs = GetLhs(tagStk, opStack);
+                        //handle postfix
+                        break;
+
+                    case OpType.CaptureGroup:
+                        if(nextMatch.Value[0] == nextOp.opEnder)
+                        {
+                            lhs = GetGroup(tagStk, nextOp, opStack, null);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+
+                rhs = nextOp.opDelegate(lhs, rhs, this);
+            } while (opStack.Count > 0);
+
+            return rhs;
+        }
+
+        private IEnumerable<string> GetLhs(Stack<string> tagStack, Stack<Match> opStack)
+        {
+            string nextTag = tagStack.Pop();
+            
+            IEnumerable<string> nextSet = tagsToGuidsDict[nextTag];
+
+            //ungrouped postfix always marks the end of a set of operations
+
+            while (opStack.Count > 0)
+            {
+                Op nextOp = PeekToOp(opStack, out Match nextMatch);
+                switch (nextOp.opType)
+                {
+                    case OpType.Prefix:
+                        opStack.Pop();
+                        nextSet = nextOp.opDelegate(null, nextSet, this);
+                        break;
+                    //all postfixes found here should not be inside brackets
+                    //therefore they will be handled by the outerloop
+                    case OpType.Postfix:
+                        return nextSet;
+
+                    case OpType.CaptureGroup:
+                        opStack.Pop(); //need to consider group ends
+                        if (nextOp.opSymbol == nextMatch.Value[0])
+                        {
+                            return nextSet;
+                        }
+                        nextSet = GetGroup(tagStack, nextOp, opStack, nextTag);
+                        return nextSet;
+                    default:
+                        break;
+                }
+            }
+            return nextSet;
+        }
+
+        private Op PopToOp(Stack<Match> opStack)
+        {
+            if (opStack.Count > 0)
+            {
+                Match nextMatch = opStack.Pop();
+                Op op = queryOpDict[nextMatch.Value[0]];
+                return op;
+            }
+
+            return null;
+        }
+
+        private Op PopToOp(Stack<Match> opStack, out Match opMatch)
+        {
+            if (opStack.Count > 0)
+            {
+                opMatch = opStack.Pop();
+                Op op = queryOpDict[opMatch.Value[0]];
+
+                return op;
+            }
+            opMatch = null;
+
+            return null;
+        }
+
+
+        private Op PeekToOp(Stack<Match> opStack)
+        {
+            if (opStack.Count > 0)
+            {
+                Match nextMatch = opStack.Peek();
+                Op op = queryOpDict[nextMatch.Value[0]];
+                return op;
+            }
+
+            return null;
+        }
+
+        private Op PeekToOp(Stack<Match> opStack, out Match opMatch)
+        {
+            if (opStack.Count > 0)
+            {
+                opMatch = opStack.Peek();
+                Op op = queryOpDict[opMatch.Value[0]];
+
+                return op;
+            }
+            opMatch = null;
+
+            return null;
+        }
+
+        private IEnumerable<string> GetGroup(Stack<string> tagStack, Op groupOp, Stack<Match> opStack, string currentTag = null)
+        {
+            if (currentTag == null)
+            {
+                currentTag = tagStack.Pop();
+            }
             IEnumerable<string> currentResults = tagsToGuidsDict[currentTag];
 
-            for (int i = 0; i < matches.Count; i++)
-            {
-                Match nextOpMatch = matches[i];
-                Op nextOP = queryOpDict[nextOpMatch.Value[0]];
 
-                switch (nextOP.opType)
+            while (opStack.Count > 0)
+            {
+                Match nextMatch = opStack.Pop();
+                Op nextOp = queryOpDict[nextMatch.Value[0]];
+
+                switch (nextOp.opType)
                 {
                     case OpType.Prefix:
-                        currentResults = ActionPrefixOP(currentResults, ref currentTag, tagQ, nextOP, matches, ref i);
+                        
+                        currentResults = nextOp.opDelegate(null, currentResults, this);
                         break;
+
                     case OpType.Postfix:
-                        currentResults = ActionPostFixOp(currentResults, ref currentTag, tagQ, matches, nextOpMatch, ref i);
+                        IEnumerable<string> lhs = GetLhs(tagStack, opStack);
+                        currentResults = nextOp.opDelegate(lhs, currentResults, this);
                         break;
-                    case OpType.Group:
-                        currentResults = ProcessGroup(currentResults, ref currentTag, tagQ, nextOP, matches, ref i);
-                        break;
-                    default:
-                        throw new System.NotImplementedException("Unknown op type:" + nextOP.opType.ToString());
-                }
-            }
 
-            return currentResults;
-        }
-
-        private IEnumerable<string> ActionPostFixOp(IEnumerable<string> currentResults, ref string currentTag, Queue<string> tagQ, MatchCollection regexOpMatches, Match nextOPRegex, ref int matchIdx)
-        {
-            string rightTag = tagQ.Dequeue();
-            IEnumerable<string> rhsTaggedList = tagsToGuidsDict[rightTag];
-
-            Op op = queryOpDict[nextOPRegex.Value[0]];
-
-            int lookAheadOpIdx = matchIdx + 1;
-            if (lookAheadOpIdx >= regexOpMatches.Count)
-            {
-                return op.opDelegate(currentResults, rhsTaggedList, this);
-
-            }
-            Op lookAheadOp = queryOpDict[regexOpMatches[lookAheadOpIdx].Value[0]];
-            Match nextLkAhdMatch = regexOpMatches[lookAheadOpIdx];
-            if (lookAheadOp.opType == OpType.Postfix)
-            {
-                return op.opDelegate(currentResults, rhsTaggedList, this);
-            }
-            do
-            {
-                if (lookAheadOp.opType == OpType.Prefix)
-                {
-                    rhsTaggedList = ActionPrefixOP(rhsTaggedList, ref rightTag, tagQ, lookAheadOp, regexOpMatches, ref lookAheadOpIdx);
-                }
-                else if (lookAheadOp.opType == OpType.Group)
-                {
-                    if (lookAheadOp.opEnder != nextLkAhdMatch.Value[0])
-                    {
-                        rhsTaggedList = ProcessGroup(rhsTaggedList, ref rightTag, tagQ, lookAheadOp, regexOpMatches, ref lookAheadOpIdx);
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-                lookAheadOpIdx++;
-                if (lookAheadOpIdx >= regexOpMatches.Count)
-                {
-                    break;
-                }
-                nextLkAhdMatch = regexOpMatches[lookAheadOpIdx];
-                lookAheadOp = queryOpDict[nextLkAhdMatch.Value[0]];
-
-            } while (lookAheadOp.opType != OpType.Postfix);
-
-            currentTag = rightTag;
-            matchIdx = lookAheadOpIdx + 1;
-
-            return currentResults = op.opDelegate(currentResults, rhsTaggedList, this);
-        }
-
-        private IEnumerable<string> ActionPrefixOP(IEnumerable<string> currentResults, ref string currentTag, Queue<string> tagQ, Op op, MatchCollection regexOpMatches, ref int matchIdx )
-        {
-            IEnumerable<string> rhsTaggedList = tagsToGuidsDict[currentTag];
-
-            int lookAheadOpIdx = matchIdx + 1;
-
-            if (lookAheadOpIdx >= regexOpMatches.Count)
-            {
-                return op.opDelegate(currentResults, rhsTaggedList, this);
-            }
-            Match nextLkAhdMatch = regexOpMatches[lookAheadOpIdx];
-            Op lookAheadOp = queryOpDict[nextLkAhdMatch.Value[0]];
-            if (lookAheadOp.opType == OpType.Postfix)
-            {
-                return op.opDelegate(currentResults, rhsTaggedList, this);
-            }
-            do
-            {
-                if (lookAheadOp.opType == OpType.Prefix)
-                {
-                    rhsTaggedList = ActionPrefixOP(rhsTaggedList, ref currentTag, tagQ, lookAheadOp, regexOpMatches, ref lookAheadOpIdx);
-                }
-                else if (lookAheadOp.opType == OpType.Group)
-                {
-                    if (lookAheadOp.opEnder != nextLkAhdMatch.Value[0])
-                    {
-                        rhsTaggedList = ProcessGroup(rhsTaggedList, ref currentTag, tagQ, lookAheadOp, regexOpMatches, ref lookAheadOpIdx);
-                    }
-                    else
-                    {
-                        break;
-                    }
-                    rhsTaggedList = ProcessGroup(rhsTaggedList, ref currentTag, tagQ, lookAheadOp, regexOpMatches, ref lookAheadOpIdx);
-                }
-                lookAheadOpIdx++;
-                if (lookAheadOpIdx >= regexOpMatches.Count)
-                {
-                    break;
-                }
-                nextLkAhdMatch = regexOpMatches[lookAheadOpIdx];
-                lookAheadOp = queryOpDict[nextLkAhdMatch.Value[0]];
-
-            } while (lookAheadOp.opType != OpType.Postfix);
-
-            matchIdx = lookAheadOpIdx + 1;
-
-            return op.opDelegate(currentResults, rhsTaggedList, this);
-        }
-
-        private IEnumerable<string> ProcessGroup(IEnumerable<string> currentResults, ref string currentTag, Queue<string> tagQ, Op op, MatchCollection regexOpMatches, ref int matchIdx)
-        {
-            IEnumerable<string> rhsTaggedList = tagsToGuidsDict[currentTag];
-            int lookAheadIdx = matchIdx + 1;
-            Match lookAhdMatch = regexOpMatches[lookAheadIdx];
-            Op lookAhdOp = queryOpDict[lookAhdMatch.Value[0]];
-            bool groupEndFlag = false;
-
-            do
-            {
-                switch (lookAhdOp.opType)
-                {
-                    case OpType.Prefix:
-                        rhsTaggedList = ActionPrefixOP(rhsTaggedList, ref currentTag, tagQ, op, regexOpMatches, ref lookAheadIdx);
-                        break;
-                    case OpType.Postfix:
-                        rhsTaggedList = ActionPostFixOp(rhsTaggedList, ref currentTag, tagQ, regexOpMatches, lookAhdMatch, ref lookAheadIdx);
-                        break;
-                    case OpType.Group:
-                        if (lookAhdOp.opEnder != op.opEnder)
-                        {// as they find an opening before the end for nested ones, this should work. A stack which pops whenever an end bracket is found does the same thing
-                            rhsTaggedList = ProcessGroup(rhsTaggedList, ref currentTag, tagQ, lookAhdOp, regexOpMatches, ref lookAheadIdx);
-                        }
-                        else
+                    case OpType.CaptureGroup:
+                        
+                        //whenever an end bracket is met, the system should stop;
+                        if (nextMatch.Value[0] == nextOp.opSymbol)
                         {
-                            groupEndFlag = true;
+                            return nextOp.opDelegate(null, currentResults, this);
                         }
+                        currentResults = GetGroup(tagStack, nextOp, opStack, currentTag);
                         break;
+
                     default:
-                        throw new System.InvalidOperationException("Uknown OpType: " + lookAhdOp.opType.ToString());
+                        break;
                 }
+            }
 
-            } while (groupEndFlag);
-
-            matchIdx = lookAheadIdx + 1;
-
-            return op.opDelegate(currentResults, rhsTaggedList, this);
+            //get operators until closing operator is found
+            // if another group, call this function again (and increment depth by 1?)
+            //otherwise do prefixes and call getlhs where needed
+            //perform group operation
+            return groupOp.opDelegate(null,currentResults,this);
         }
 
         /// <summary>
@@ -456,7 +475,7 @@ namespace Audiomata
         /// <summary>
         /// Gets All the op symbols within the dictionary
         /// </summary>
-        /// <returns>An active array of characters used to reference operations</returns>
+        /// <returns>The active array of characters used (as keys) to reference operations</returns>
         public char[] GetAllOpSymbols()
         {
             char[] outOps = new char[queryOpDict.Count];
@@ -488,7 +507,7 @@ namespace Audiomata
             };
 
             queryOpDict.Add(opChar, op);
-            if (opType == OpType.Group)
+            if (opType == OpType.CaptureGroup)
             {
                 op.opEnder = endChar;
                 queryOpDict.Add(endChar, op);
@@ -499,23 +518,48 @@ namespace Audiomata
 
         private IEnumerable<string> OrLstSet(IEnumerable<string> guidSetLeft, IEnumerable<string> guidSetRight, QueryManager qm)
         {
-            return guidSetLeft.Union(guidSetRight);
+            var outQ = guidSetLeft.Union(guidSetRight);
+            Debug.Log("OR Results");
+            DebugPrint(outQ);
+            return outQ;
         }
 
         private IEnumerable<string> XorLstSet(IEnumerable<string> guidSetLeft, IEnumerable<string> guidSetRight, QueryManager qm)
         {
-            return guidSetLeft.Except(guidSetRight);
+            IEnumerable<string> left = guidSetLeft.Except(guidSetRight);
+            IEnumerable<string> right = guidSetRight.Except(guidSetLeft);
+
+            return left.Union(right);
         }
 
         private IEnumerable<string> AndLstSet(IEnumerable<string> guidSetLeft, IEnumerable<string> guidSetRight, QueryManager qm)
         {
-            return guidSetLeft.Intersect(guidSetRight);
+            var outQ = guidSetLeft.Intersect(guidSetRight);
+            Debug.Log("AND Results");
+            DebugPrint(outQ);
+            return outQ;
         }
 
         private IEnumerable<string> NotLstSet(IEnumerable<string> guidSetLeft, IEnumerable<string> guidSetRight, QueryManager qm)
         {
             IEnumerable<string> outQuery = qm.AllGuids.Except(guidSetRight); ;
+            Debug.Log("NOT Results");
+            DebugPrint(outQuery);
             return outQuery;
+        }
+
+        private void DebugPrint(IEnumerable<string> set)
+        {
+            Debug.Log("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+            List<string> setLst = set.ToList();
+
+            foreach (string guid in setLst)
+            {
+                AudioClip next = guidToClipDict[guid];
+
+                Debug.Log(next.name);
+            }
+            Debug.Log("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
         }
 
         private IEnumerable<string> SingleRandSelection(IEnumerable<string> guidSetLeft, IEnumerable<string> guidSetRight, QueryManager qm)
@@ -534,8 +578,13 @@ namespace Audiomata
 
         private IEnumerable<string> Bracket(IEnumerable<string> guidSetLeft, IEnumerable<string> guidSetRight, QueryManager qm)
         {
-            //this is done to action the queries that have occured between them, may be possible to just do nothing though may cause issues later on
-            return guidSetLeft.ToList();
+            //this is done to action the queries that have occured between them (Enumerables remain as a set of queries until values requested)
+            //may be possible to just do nothing though may cause issues later on
+
+            var outSet = guidSetRight.ToList();
+
+            Debug.Log("Out Results: ");
+            return outSet;
         }
 
         public IEnumerable<string> AllGuids

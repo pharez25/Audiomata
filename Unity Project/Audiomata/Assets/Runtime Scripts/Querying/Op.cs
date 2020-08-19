@@ -23,10 +23,10 @@ namespace Audiomata
         /// <summary>
         /// An Operation to be done with the query manager
         /// </summary>
-        /// <param name="guidSetLeft"> the current result of all previous operations, modify this to apply ops </param>
+        /// <param name="guidSetLeft"> the current result of all previous operations</param>
         /// <param name="guidSetRight">the results of a dicionary tag query to the right hand side of operator of ids</string></param>
-        /// <remarks>All IEnumerables are of type List<string>, a change of type can cause unintended faults</remarks>       
-        public delegate IEnumerable<string> QueryOperation(IEnumerable<string> guidSetLeft, IEnumerable<string> guidSetRight, QueryManager qmInstance = null);
+        /// <remarks>All IEnumerables are of type List<string>, a change of type can cause unintended faults</remarks>      
+        public delegate IEnumerable<string> QueryOperation(IEnumerable<string> guidSetLeft, IEnumerable<string> guidSetRight, QueryManager qmInstance);
 
 
         /// <summary>
@@ -57,23 +57,26 @@ namespace Audiomata
     }
 
     /// <summary>
-    /// The way in which the operation character is inseterted into a query
+    /// The way in which the operation character is inseterted into a query, with int values corresponding to precedence
     /// </summary>
     public enum OpType
     {
         /// <summary>
-        /// Before the tag only operates on one tag
+        /// Before the tag only operates on one tag (lhs will always be null)
         /// </summary>
-        Prefix,
+        Prefix = 10,
         /// <summary>
         /// After the tag, only operates on 2 tags
         /// </summary>
-        Postfix,
+        Postfix = 1,
         /// <summary>
         /// As a seperator between multiple tags e.g. [example&other]&something-else
         /// </summary>
-        /// <remarks>Does the operations within first then returns the values, this may change in the future</remarks>
-        Group,
-        //Tag opType was to be done, this would have done stuff to process and output a tag
+        /// <remarks>Does the operations within it's tags then does it's operation afterwards</remarks>
+        CaptureGroup = 100,
+        //Other Optype ideas:
+        //tag -> does something on the tag (can be used to compute the correct tag with known tag patterns)
+        //post op - does something when the op is finished,
+        //preop - does something at the start of the operation
     }
 }

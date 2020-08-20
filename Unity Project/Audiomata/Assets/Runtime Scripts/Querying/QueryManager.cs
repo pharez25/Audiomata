@@ -12,7 +12,11 @@ namespace Audiomata
     /// </summary>
     public class QueryManager
     {
+        /// <summary>
+        /// a dictionary of tags to clip guids, this is done because of the idea of adding a clip name based dictionary in the future
+        /// </summary>
         private Dictionary<string, List<string>> tagsToGuidsDict;
+        private Dictionary<string, string> nameToGuidDict;
         private Dictionary<string, AudioClip> guidToClipDict;
         private Dictionary<char, Op> queryOpDict;
         private Regex opRegex;
@@ -32,10 +36,14 @@ namespace Audiomata
             tagsToGuidsDict = new Dictionary<string, List<string>>();
             guidToClipDict = new Dictionary<string, AudioClip>();
             queryOpDict = new Dictionary<char, Op>();
+            nameToGuidDict = new Dictionary<string, string>();
+
             //populate audio data
             for (int i = 0; i < audioData.Length; i++)
             {
                 AudioData nextAD = audioData[i];
+                nameToGuidDict[nextAD.name] = nextAD.guid;
+
                 guidToClipDict.Add(nextAD.guid, nextAD.clip);
 
                 List<string> tagList = nextAD.tags;
@@ -162,6 +170,15 @@ namespace Audiomata
         }
 
         public AudioClip GetTrackById(string id) => guidToClipDict[id];
+
+        /// <summary>
+        /// Gets a track by clip name
+        /// </summary>
+        /// <param name="name">The name of the clip</param>
+        /// <returns>The audio clip if found</returns>
+        /// <remarks>Names get overwritten (by the one lowest down the list) and will throw exceptions for invalid names</remarks>
+        public AudioClip GetTrackbyName(string name) => guidToClipDict[nameToGuidDict[name]];
+        
 
         public Op GetOp(char c) => queryOpDict[c];
 
@@ -385,7 +402,6 @@ namespace Audiomata
 
             return null;
         }
-
 
         private Op PeekToOp(Stack<Match> opStack)
         {

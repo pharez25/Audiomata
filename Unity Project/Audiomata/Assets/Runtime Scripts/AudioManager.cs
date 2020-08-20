@@ -14,10 +14,13 @@ namespace Audiomata
 
         public static AudioManager Instance { get; private set; }
 
+        public EventManager EventManager { get; private set; }
+
         /// <summary>
         /// System to Manage queries to the runtime audio dictionaries
         /// </summary>
         public QueryManager QueryManager { get; private set; }
+
         /// <summary>
         /// Whether the AudioManager has completed it's initialisation (Uses Awake)
         /// </summary>
@@ -31,7 +34,7 @@ namespace Audiomata
             }
             else
             {
-                Debug.LogError("2 Audiomata Runtime Managers present on this scene, this is a Singleton Manager class");
+                Debug.LogError("2 Audiomata.AudioManagers present on this scene, this is a Singleton Manager class");
                 Destroy(this);
                 return;
             }
@@ -42,7 +45,7 @@ namespace Audiomata
 
              //   Debug.Log(next);
             }
-
+            EventManager = new EventManager();
             QueryManager = new QueryManager(relevantClips);
             IsSetUp = true;
             QueryManager.QueryAudio(qTest, out var results);
@@ -53,6 +56,20 @@ namespace Audiomata
             }
             Debug.Log("Results End");
 
+
+            EventManager.AddEventReference("test", TestEvent);            
+        }
+
+        private void Start()
+        {
+            EventManager.FireEvent("test", this, this);
+        }
+
+        private void TestEvent (object sender, Object target)
+        {
+            relevantClips = null;
+            AudioManager manager = (AudioManager)target;
+            manager.gameObject.transform.Rotate(45, 45, 45, Space.Self);
         }
 
         private void OnDestroy()

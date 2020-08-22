@@ -12,9 +12,6 @@ namespace Audiomata
     /// </summary>
     public class QueryManager
     {
-        /// <summary>
-        /// a dictionary of tags to clip guids, this is done because of the idea of adding a clip name based dictionary in the future
-        /// </summary>
         private Dictionary<string, List<string>> tagsToGuidsDict;
         private Dictionary<string, string> nameToGuidDict;
         private Dictionary<string, AudioClip> guidToClipDict;
@@ -23,6 +20,7 @@ namespace Audiomata
         private const char noOpChar = '\0';
 
         private readonly List<string> allGuids;
+
         /// <summary>
         /// Creates an instance of a class that can query tags with in buil or custom operations
         /// </summary>
@@ -30,7 +28,6 @@ namespace Audiomata
         /// <param name="customOperators">A dictionary of custom Operators</param>
         /// <param name="overwriteDictionary">Whether in built operations should be overrided </param>
         /// <remarks>If replace operations is true, the dictionary will be completely replaced set false for merge</remarks>
-
         public QueryManager(AudioData[] audioData, Dictionary<char, Op> customOperators = null, bool overwriteDictionary = false)
         {
             tagsToGuidsDict = new Dictionary<string, List<string>>();

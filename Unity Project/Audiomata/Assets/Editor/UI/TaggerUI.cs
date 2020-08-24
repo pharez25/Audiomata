@@ -86,7 +86,7 @@ namespace Audiomata
 
         private void CleanMetaData(bool withRefresh = false)
         {
-            AssetImporter.CleanAudioData();
+            MetaDataManager.CleanAudioData();
             if (withRefresh)
             {
                 FullRefresh();
@@ -193,7 +193,7 @@ namespace Audiomata
             }
 
             audioDataDict.Clear();
-            AudioData[] allAudio = AssetImporter.GenerateAndLoadAllAudioData();
+            AudioData[] allAudio = MetaDataManager.GenerateAndLoadAllAudioData();
 
             for (int i = 0; i < allAudio.Length; i++)
             {

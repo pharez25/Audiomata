@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
+using Audiomata.ComponentMapping;
+
 
 namespace Audiomata
 {
@@ -28,9 +30,9 @@ namespace Audiomata
 
         private void RefreshTracksToAddList()
         {
-            AudioData[] all = AssetImporter.LoadAllAudioData();
+            AudioData[] all = MetaDataManager.LoadAllAudioData();
             unAddedTracks = new List<AudioData>();
-            unAddedTracks.AddRange(AssetImporter.LoadAllAudioData());
+            unAddedTracks.AddRange(MetaDataManager.LoadAllAudioData());
             unAddedTracks.Sort((a, b) =>  string.Compare(b.clip.name, a.clip.name));
             int refArrySize = managerRefClips.arraySize;
 
@@ -157,6 +159,11 @@ namespace Audiomata
                 showAddableTracks = true;
             }
             GUILayout.Space(15);
+
+            if (GUILayout.Button("Generate Command Pattern References"))
+            {
+                AudioMapGenerator.GenerateScripts();
+            }
 
             serializedObject.ApplyModifiedProperties();
         }

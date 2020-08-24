@@ -8,10 +8,20 @@ namespace Audiomata.ComponentTrackers
 {
     public interface IAudioCommandable
     {
-        void SetPropValue<T>(T newValue, int enumeratedProp);
-        void ClearChangeHistory();
-        void UndoLast();
-        void UndoAll();
+
+        object RegisterCommand(int enumeratedProp);
+        object DoCommand<T>(T value, int enumeratedProp);//
+        void ClearChangeHistory();//
+        //Undoes the last command that was just done
+        void UndoLast();//
+        //Removes all Commands from the stack and undoes them;
+        void UndoAll();//
+        /// <summary>
+        /// Undoes specified command, ignoring stack
+        /// </summary>
+        /// <typeparam name="T">Target Component</typeparam>
+        /// <param name="command">command to be undone </param>
+        void UndoCommand(object command);//
     }
     
 
@@ -28,9 +38,12 @@ namespace Audiomata.ComponentTrackers
      
     }
 
+    /// <summary>
+    /// Command state for commands that are done over time, otherwise "NotUsed"
+    /// </summary>
     public enum CommandState
     {
-        Doing,Undoing,Done,Unapplied
+        Doing,Undoing,Done,Unapplied,NotUsed
     }
 
 }

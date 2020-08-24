@@ -5,9 +5,9 @@ using UnityEngine;
 
 namespace Audiomata
 {
-    public static class AssetImporter
+    public static class MetaDataManager
     {
-        private static string dataDirectory = @"Assets\Audiomata\Generated Data\Track Metadata\";
+        private static readonly string dataDirectory = @"Assets\Audiomata\Generated Data\Track Metadata\";
         public static string FileNamePrefix { get{return "SampleData-";} }
 
         public static AudioData[] GenerateAndLoadAllAudioData()

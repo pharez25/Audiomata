@@ -1,9 +1,11 @@
-﻿namespace Audiomata.ComponentTrackers
+﻿using System;
+
+namespace Audiomata.ComponentTrackers
 {
     public abstract class AudioCommand<T>
     {
-        public T Target { get; internal set; }
-        CommandState commandState { get; }
+        public virtual T Target { get; protected set; }
+        CommandState CommandState { get; }
         public virtual IAudioCommand<T> GetInterface()
         {
             return (IAudioCommand<T>)this;
@@ -14,6 +16,5 @@
         {
             throw new System.NotImplementedException();
         }
-
     }
 }

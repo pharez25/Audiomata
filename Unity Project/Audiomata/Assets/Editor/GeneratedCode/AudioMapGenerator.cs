@@ -10,11 +10,13 @@ using System.Collections.Generic;
 namespace Audiomata.ComponentMapping
 {
     /// <summary>
-    /// This is a way of mapping all classes into a command pattern
+    /// This is a way of mapping all classes into a command pattern automatically via a T4 template
     /// </summary>
+    /// <remarks> The parsing of an input component was forgotten and added afterwards </remarks>
     [ExecuteInEditMode]
     public static class AudioMapGenerator
     {
+
 
         private static readonly Type[] allAudioTypes = new Type[]
         {

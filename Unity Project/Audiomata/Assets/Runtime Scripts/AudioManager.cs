@@ -16,6 +16,8 @@ namespace Audiomata
 
         public EventManager EventManager { get; private set; }
 
+        public AudioEffectManager EffectManager { get; private set; }
+
         /// <summary>
         /// System to Manage queries to the runtime audio dictionaries
         /// </summary>
@@ -47,6 +49,12 @@ namespace Audiomata
             }
             EventManager = new EventManager();
             QueryManager = new QueryManager(relevantClips);
+
+            if (!EffectManager)
+            {
+                EffectManager = GetComponent<AudioEffectManager>();
+            }
+            
             IsSetUp = true;
             QueryManager.QueryAudio(qTest, out var results);
             Debug.Log("Full Query Results: ");

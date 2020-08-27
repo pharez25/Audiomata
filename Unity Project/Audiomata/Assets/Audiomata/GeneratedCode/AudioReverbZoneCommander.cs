@@ -40,9 +40,17 @@ namespace Audiomata.ComponentTrackers
         private LimitedStack<AudioCommand<AudioReverbZone>> audioCommands;
         public AudioReverbZone Target { get; private set; }
 
-        public AudioReverbZoneCommander()
+        public AudioReverbZoneCommander(AudioReverbZone target)
         {
             audioCommands = new LimitedStack<AudioCommand<AudioReverbZone>>();
+            Target = target;
+        }
+
+        public AudioCommand<AudioReverbZone> CreateCommand(int enumeratedProp)
+        {
+            AudioCommand <AudioReverbZone> newCommand = CommandFactory(enumeratedProp);
+            audioCommands.Push(newCommand);
+            return newCommand;
         }
 
         public object DoCommand<T>(T value, int enumeratedProp)
@@ -165,8 +173,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioReverbZoneCmdMinDistance : AudioCommand<AudioReverbZone>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get; set; }
+        public float FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -210,8 +218,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioReverbZoneCmdMaxDistance : AudioCommand<AudioReverbZone>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get; set; }
+        public float FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -255,8 +263,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioReverbZoneCmdReverbPreset : AudioCommand<AudioReverbZone>, IAudioCommand<AudioReverbPreset>
     {
 
-        public AudioReverbPreset InitialValue { get; private set; }
-        public AudioReverbPreset FinalValue { get; private set; }
+        public AudioReverbPreset InitialValue { get; set; }
+        public AudioReverbPreset FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -294,8 +302,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioReverbZoneCmdRoom : AudioCommand<AudioReverbZone>, IAudioCommand<int>
     {
 
-        public int InitialValue { get; private set; }
-        public int FinalValue { get; private set; }
+        public int InitialValue { get; set; }
+        public int FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -339,8 +347,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioReverbZoneCmdRoomHF : AudioCommand<AudioReverbZone>, IAudioCommand<int>
     {
 
-        public int InitialValue { get; private set; }
-        public int FinalValue { get; private set; }
+        public int InitialValue { get;  set; }
+        public int FinalValue { get;  set; }
         public CommandState CommandState { get; set; }
 
 
@@ -384,8 +392,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioReverbZoneCmdRoomLF : AudioCommand<AudioReverbZone>, IAudioCommand<int>
     {
 
-        public int InitialValue { get; private set; }
-        public int FinalValue { get; private set; }
+        public int InitialValue { get;  set; }
+        public int FinalValue { get;  set; }
         public CommandState CommandState { get; set; }
 
 
@@ -429,8 +437,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioReverbZoneCmdDecayTime : AudioCommand<AudioReverbZone>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get;  set; }
+        public float FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -474,8 +482,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioReverbZoneCmdDecayHFRatio : AudioCommand<AudioReverbZone>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get; set; }
+        public float FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -519,8 +527,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioReverbZoneCmdReflections : AudioCommand<AudioReverbZone>, IAudioCommand<int>
     {
 
-        public int InitialValue { get; private set; }
-        public int FinalValue { get; private set; }
+        public int InitialValue { get; set; }
+        public int FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -564,8 +572,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioReverbZoneCmdReflectionsDelay : AudioCommand<AudioReverbZone>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get; set; }
+        public float FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -609,8 +617,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioReverbZoneCmdReverb : AudioCommand<AudioReverbZone>, IAudioCommand<int>
     {
 
-        public int InitialValue { get; private set; }
-        public int FinalValue { get; private set; }
+        public int InitialValue { get;  set; }
+        public int FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -654,8 +662,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioReverbZoneCmdReverbDelay : AudioCommand<AudioReverbZone>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get;  set; }
+        public float FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -699,8 +707,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioReverbZoneCmdHFReference : AudioCommand<AudioReverbZone>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get; set; }
+        public float FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -744,8 +752,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioReverbZoneCmdLFReference : AudioCommand<AudioReverbZone>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get; set; }
+        public float FinalValue { get;  set; }
         public CommandState CommandState { get; set; }
 
 
@@ -789,8 +797,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioReverbZoneCmdDiffusion : AudioCommand<AudioReverbZone>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get;  set; }
+        public float FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -834,8 +842,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioReverbZoneCmdDensity : AudioCommand<AudioReverbZone>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get;  set; }
+        public float FinalValue { get;  set; }
         public CommandState CommandState { get; set; }
 
 
@@ -879,8 +887,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioReverbZoneCmdEnabled : AudioCommand<AudioReverbZone>, IAudioCommand<bool>
     {
 
-        public bool InitialValue { get; private set; }
-        public bool FinalValue { get; private set; }
+        public bool InitialValue { get;  set; }
+        public bool FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 

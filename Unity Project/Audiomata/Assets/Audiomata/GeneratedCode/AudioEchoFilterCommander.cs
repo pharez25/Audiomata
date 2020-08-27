@@ -28,8 +28,9 @@ namespace Audiomata.ComponentTrackers
         private LimitedStack<AudioCommand<AudioEchoFilter>> audioCommands;
         public AudioEchoFilter Target { get; private set; }
 
-        public AudioEchoFilterCommander()
+        public AudioEchoFilterCommander(AudioEchoFilter component)
         {
+            Target = component;
             audioCommands = new LimitedStack<AudioCommand<AudioEchoFilter>>();
         }
 
@@ -42,6 +43,13 @@ namespace Audiomata.ComponentTrackers
         }
 
         public object RegisterCommand(int enumeratedProp)
+        {
+            AudioCommand<AudioEchoFilter> newCommand = CommandFactory(enumeratedProp);
+            audioCommands.Push(newCommand);
+            return newCommand;
+        }
+
+        public AudioCommand<AudioEchoFilter> CreateCommand(int enumeratedProp)
         {
             AudioCommand<AudioEchoFilter> newCommand = CommandFactory(enumeratedProp);
             audioCommands.Push(newCommand);
@@ -117,8 +125,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioEchoFilterCmdDelay : AudioCommand<AudioEchoFilter>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get;  set; }
+        public float FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -162,8 +170,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioEchoFilterCmdDecayRatio : AudioCommand<AudioEchoFilter>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get; set; }
+        public float FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -207,8 +215,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioEchoFilterCmdDryMix : AudioCommand<AudioEchoFilter>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get; set; }
+        public float FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -252,8 +260,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioEchoFilterCmdWetMix : AudioCommand<AudioEchoFilter>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get;  set; }
+        public float FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -297,8 +305,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioEchoFilterCmdEnabled : AudioCommand<AudioEchoFilter>, IAudioCommand<bool>
     {
 
-        public bool InitialValue { get; private set; }
-        public bool FinalValue { get; private set; }
+        public bool InitialValue { get;  set; }
+        public bool FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 

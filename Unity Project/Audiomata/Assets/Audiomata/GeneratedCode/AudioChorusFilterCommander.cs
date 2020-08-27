@@ -31,9 +31,10 @@ namespace Audiomata.ComponentTrackers
         private LimitedStack<AudioCommand<AudioChorusFilter>> audioCommands;
         public AudioChorusFilter Target { get; private set; }
 
-        public AudioChorusFilterCommander()
+        public AudioChorusFilterCommander(AudioChorusFilter component)
         {
             audioCommands = new LimitedStack<AudioCommand<AudioChorusFilter>>();
+            Target = component;
         }
 
         public object DoCommand<T>(T value, int enumeratedProp)
@@ -45,6 +46,13 @@ namespace Audiomata.ComponentTrackers
         }
 
         public object RegisterCommand(int enumeratedProp)
+        {
+            AudioCommand<AudioChorusFilter> newCommand = CommandFactory(enumeratedProp);
+            audioCommands.Push(newCommand);
+            return newCommand;
+        }
+
+        public AudioCommand<AudioChorusFilter> CreateCommand(int enumeratedProp)
         {
             AudioCommand<AudioChorusFilter> newCommand = CommandFactory(enumeratedProp);
             audioCommands.Push(newCommand);
@@ -129,8 +137,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioChorusFilterCmdDryMix : AudioCommand<AudioChorusFilter>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get;  set; }
+        public float FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -174,8 +182,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioChorusFilterCmdWetMix1 : AudioCommand<AudioChorusFilter>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get;  set; }
+        public float FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -219,8 +227,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioChorusFilterCmdWetMix2 : AudioCommand<AudioChorusFilter>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get;  set; }
+        public float FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -264,8 +272,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioChorusFilterCmdWetMix3 : AudioCommand<AudioChorusFilter>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get; set; }
+        public float FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -309,8 +317,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioChorusFilterCmdDelay : AudioCommand<AudioChorusFilter>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get;  set; }
+        public float FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -354,8 +362,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioChorusFilterCmdRate : AudioCommand<AudioChorusFilter>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get;  set; }
+        public float FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -399,8 +407,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioChorusFilterCmdDepth : AudioCommand<AudioChorusFilter>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get;  set; }
+        public float FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -444,8 +452,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioChorusFilterCmdEnabled : AudioCommand<AudioChorusFilter>, IAudioCommand<bool>
     {
 
-        public bool InitialValue { get; private set; }
-        public bool FinalValue { get; private set; }
+        public bool InitialValue { get;  set; }
+        public bool FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 

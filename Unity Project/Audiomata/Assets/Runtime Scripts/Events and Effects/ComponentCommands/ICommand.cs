@@ -8,7 +8,7 @@ namespace Audiomata.ComponentTrackers
 {
     public interface IAudioCommandable
     {
-
+        //enum for type?
         object RegisterCommand(int enumeratedProp);
         object DoCommand<T>(T value, int enumeratedProp);//
         void ClearChangeHistory();//
@@ -24,17 +24,22 @@ namespace Audiomata.ComponentTrackers
         void UndoCommand(object command);//
     }
     
+    public interface ICommandLerpable
+    {
+        void Step(float t);
+    }
 
-    public interface IAudioCommand<T>
+
+    public interface IAudioCommand<T>:ICommandLerpable
     {
 
         void Do(T newValue);
         void Undo();
         int TargetPropEnum();
-        T InitialValue { get; }
-        T FinalValue { get; }
+        T InitialValue { get; set; }
+        T FinalValue { get; set; }
         CommandState CommandState { get; set; }
-        void Step(float t);
+        new void Step(float t);
      
     }
 

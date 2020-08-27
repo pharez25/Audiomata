@@ -26,15 +26,23 @@ namespace Audiomata.ComponentTrackers
         private LimitedStack<AudioCommand<AudioHighPassFilter>> audioCommands;
         public AudioHighPassFilter Target { get; private set; }
 
-        public AudioHighPassFilterCommander()
+        public AudioHighPassFilterCommander(AudioHighPassFilter component)
         {
             audioCommands = new LimitedStack<AudioCommand<AudioHighPassFilter>>();
+            Target = component;
         }
 
         public object DoCommand<T>(T value, int enumeratedProp)
         {
             AudioCommand<AudioHighPassFilter> newCommand = CommandFactory(enumeratedProp);
             newCommand.Do(value);
+            audioCommands.Push(newCommand);
+            return newCommand;
+        }
+
+        public AudioCommand<AudioHighPassFilter> CreateCommand(int enumeratedProp)
+        {
+            AudioCommand<AudioHighPassFilter> newCommand = CommandFactory(enumeratedProp);
             audioCommands.Push(newCommand);
             return newCommand;
         }
@@ -109,8 +117,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioHighPassFilterCmdCutoffFrequency : AudioCommand<AudioHighPassFilter>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get; set; }
+        public float FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -154,8 +162,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioHighPassFilterCmdHighpassResonanceQ : AudioCommand<AudioHighPassFilter>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get; set; }
+        public float FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -199,8 +207,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioHighPassFilterCmdEnabled : AudioCommand<AudioHighPassFilter>, IAudioCommand<bool>
     {
 
-        public bool InitialValue { get; private set; }
-        public bool FinalValue { get; private set; }
+        public bool InitialValue { get; set; }
+        public bool FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 

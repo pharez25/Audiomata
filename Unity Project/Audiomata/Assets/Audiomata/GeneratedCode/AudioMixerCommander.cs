@@ -7,13 +7,16 @@ namespace Audiomata.ComponentTrackers
     //					THIS CODE IS AUTOMATICALLY GENERATED, DO NOT MODIFY
     //-------------------------------------------------------------------------------------------------------------------------------
     using UnityEngine.Audio;
-
+    using UnityEngine;
     // Auto generated props, can use reflections but don't because it is REALLY slow
     #region EnumeratedProps
     public enum AudioMixerMembers
     {
         updateMode
-        , outputAudioMixerGroup
+        ,outputAudioMixerGroup,
+       // TransistionToSnapShots,
+       // ClearFloat,
+       // SetFloat
 
     }
     #endregion
@@ -23,11 +26,23 @@ namespace Audiomata.ComponentTrackers
     public class AudioMixerCommander : IAudioCommandable
     {
         private LimitedStack<AudioCommand<AudioMixer>> audioCommands;
+
+        //snapshot commands go on their own seperate stack because they have a lot of variables and do not work the same way as setting a value
+
         public AudioMixer Target { get; private set; }
 
-        public AudioMixerCommander()
+        public AudioMixerCommander(AudioMixer target)
         {
             audioCommands = new LimitedStack<AudioCommand<AudioMixer>>();
+            Target = target;
+            
+        }
+
+        public AudioCommand<AudioMixer> CreateCommand(int enumeratedProp)
+        {
+            AudioCommand<AudioMixer> newCommand = CommandFactory(enumeratedProp);
+            audioCommands.Push(newCommand);
+            return newCommand;
         }
 
         public object DoCommand<T>(T value, int enumeratedProp)
@@ -87,6 +102,9 @@ namespace Audiomata.ComponentTrackers
             AudioCommand<AudioMixer> nextCommand;
             switch (commandPropTarget)
             {
+                //case AudioMixerMembers.TransistionToSnapShots:
+                    
+                  //  return null;
                 case AudioMixerMembers.outputAudioMixerGroup:
                     nextCommand = new AudioMixerCmdOutputAudioMixerGroup(Target);
                     return nextCommand;
@@ -105,8 +123,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioMixerCmdOutputAudioMixerGroup : AudioCommand<AudioMixer>, IAudioCommand<AudioMixerGroup>
     {
 
-        public AudioMixerGroup InitialValue { get; private set; }
-        public AudioMixerGroup FinalValue { get; private set; }
+        public AudioMixerGroup InitialValue { get;  set; }
+        public AudioMixerGroup FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -144,8 +162,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioMixerCmdUpdateMode : AudioCommand<AudioMixer>, IAudioCommand<AudioMixerUpdateMode>
     {
 
-        public AudioMixerUpdateMode InitialValue { get; private set; }
-        public AudioMixerUpdateMode FinalValue { get; private set; }
+        public AudioMixerUpdateMode InitialValue { get; set; }
+        public AudioMixerUpdateMode FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -179,6 +197,46 @@ namespace Audiomata.ComponentTrackers
         }
 
     }
+
+   
+     /*
+    public class AudioMixerCmdTransistionToSnapshots : AudioCommand<AudioMixer>, IAudioCommand<AudioMixerSnapshot[]>
+    {
+        public AudioMixerSnapshot[] InitialValue { get; private set; }
+
+        public AudioMixerSnapshot[] FinalValue {get; private set;}
+
+        //for now these values will remain public as cmd patter assumed one param
+        public float[] Weights { get; set; }
+        public float  TransistionTime { get; set; }
+
+        public CommandState CommandState { get; set; }
+
+        public override void Do(object newValue)
+        {
+            AudioMixerSnapshot[] value = (AudioMixerSnapshot[])newValue;
+
+            Target.TransitionToSnapshots(value, Weights, TransistionTime); 
+        }
+
+        public void Do(AudioMixerSnapshot[] newValue)
+        {
+            Target.TransitionToSnapshots(newValue, Weights, TransistionTime);
+            
+        }
+
+        public int TargetPropEnum()
+        {
+            return (int)AudioMixerMembers.TransistionToSnapShots;
+        }
+
+        public override void Undo()
+        {
+            throw new System.NotImplementedException("Snapshots cannot be undone, unity seals mixer groups pretty tight! I advise you take a snapshot of the original state and apply and unapply them independently, don't worry though this will come to me in a dream as well");
+        }
+    }
+    */
+  
 
     #endregion
 }

@@ -27,15 +27,23 @@ namespace Audiomata.ComponentTrackers
         private LimitedStack<AudioCommand<AudioListener>> audioCommands;
         public AudioListener Target { get; private set; }
 
-        public AudioListenerCommander()
+        public AudioListenerCommander(AudioListener component)
         {
             audioCommands = new LimitedStack<AudioCommand<AudioListener>>();
+            Target = component;
         }
 
         public object DoCommand<T>(T value, int enumeratedProp)
         {
             AudioCommand<AudioListener> newCommand = CommandFactory(enumeratedProp);
             newCommand.Do(value);
+            audioCommands.Push(newCommand);
+            return newCommand;
+        }
+
+        public AudioCommand<AudioListener> CreateCommand(int enumeratedProp)
+        {
+            AudioCommand<AudioListener> newCommand = CommandFactory(enumeratedProp);
             audioCommands.Push(newCommand);
             return newCommand;
         }
@@ -113,8 +121,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioListenerCmdVolume : AudioCommand<AudioListener>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get;  set; }
+        public float FinalValue { get;  set; }
         public CommandState CommandState { get; set; }
 
 
@@ -158,8 +166,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioListenerCmdPause : AudioCommand<AudioListener>, IAudioCommand<bool>
     {
 
-        public bool InitialValue { get; private set; }
-        public bool FinalValue { get; private set; }
+        public bool InitialValue { get; set; }
+        public bool FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -197,8 +205,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioListenerCmdVelocityUpdateMode : AudioCommand<AudioListener>, IAudioCommand<AudioVelocityUpdateMode>
     {
 
-        public AudioVelocityUpdateMode InitialValue { get; private set; }
-        public AudioVelocityUpdateMode FinalValue { get; private set; }
+        public AudioVelocityUpdateMode InitialValue { get; set; }
+        public AudioVelocityUpdateMode FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -236,8 +244,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioListenerCmdEnabled : AudioCommand<AudioListener>, IAudioCommand<bool>
     {
 
-        public bool InitialValue { get; private set; }
-        public bool FinalValue { get; private set; }
+        public bool InitialValue { get; set; }
+        public bool FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 

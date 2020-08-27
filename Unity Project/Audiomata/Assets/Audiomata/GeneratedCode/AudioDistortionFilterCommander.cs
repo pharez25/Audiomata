@@ -25,15 +25,23 @@ namespace Audiomata.ComponentTrackers
         private LimitedStack<AudioCommand<AudioDistortionFilter>> audioCommands;
         public AudioDistortionFilter Target { get; private set; }
 
-        public AudioDistortionFilterCommander()
+        public AudioDistortionFilterCommander(AudioDistortionFilter target)
         {
             audioCommands = new LimitedStack<AudioCommand<AudioDistortionFilter>>();
+            Target = target;
         }
 
         public object DoCommand<T>(T value, int enumeratedProp)
         {
             AudioCommand<AudioDistortionFilter> newCommand = CommandFactory(enumeratedProp);
             newCommand.Do(value);
+            audioCommands.Push(newCommand);
+            return newCommand;
+        }
+
+        public AudioCommand<AudioDistortionFilter> CreateCommand(int enumeratedProp)
+        {
+            AudioCommand<AudioDistortionFilter> newCommand = CommandFactory(enumeratedProp);
             audioCommands.Push(newCommand);
             return newCommand;
         }
@@ -105,8 +113,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioDistortionFilterCmdDistortionLevel : AudioCommand<AudioDistortionFilter>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get; set; }
+        public float FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -150,8 +158,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioDistortionFilterCmdEnabled : AudioCommand<AudioDistortionFilter>, IAudioCommand<bool>
     {
 
-        public bool InitialValue { get; private set; }
-        public bool FinalValue { get; private set; }
+        public bool InitialValue { get;  set; }
+        public bool FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 

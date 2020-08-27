@@ -4,8 +4,8 @@ namespace Audiomata.ComponentTrackers
 {
     public abstract class AudioCommand<T>
     {
-        public virtual T Target { get; protected set; }
-        CommandState CommandState { get; }
+        public virtual T Target { get; internal set; }
+        public CommandState CommandState { get; set; }
         public virtual IAudioCommand<T> GetInterface()
         {
             return (IAudioCommand<T>)this;

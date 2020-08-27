@@ -51,10 +51,19 @@ namespace Audiomata.ComponentTrackers
         private LimitedStack<AudioCommand<AudioSource>> audioCommands;
         public AudioSource Target { get; private set; }
 
-        public AudioSourceCommander()
+        public AudioSourceCommander(AudioSource target)
         {
             audioCommands = new LimitedStack<AudioCommand<AudioSource>>();
+            Target = target;
         }
+
+        public AudioCommand<AudioSource> CreateCommand(int enumeratedProp)
+        {
+            AudioCommand<AudioSource> newCommand = CommandFactory(enumeratedProp);
+            audioCommands.Push(newCommand);
+            return newCommand;
+        }
+
 
         public object DoCommand<T>(T value, int enumeratedProp)
         {
@@ -206,8 +215,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioSourceCmdVolume : AudioCommand<AudioSource>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get; set; }
+        public float FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -251,8 +260,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioSourceCmdPitch : AudioCommand<AudioSource>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get; set; }
+        public float FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -296,8 +305,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioSourceCmdTime : AudioCommand<AudioSource>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get; set; }
+        public float FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -341,8 +350,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioSourceCmdTimeSamples : AudioCommand<AudioSource>, IAudioCommand<int>
     {
 
-        public int InitialValue { get; private set; }
-        public int FinalValue { get; private set; }
+        public int InitialValue { get; set; }
+        public int FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -386,8 +395,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioSourceCmdClip : AudioCommand<AudioSource>, IAudioCommand<AudioClip>
     {
 
-        public AudioClip InitialValue { get; private set; }
-        public AudioClip FinalValue { get; private set; }
+        public AudioClip InitialValue { get;  set; }
+        public AudioClip FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -425,8 +434,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioSourceCmdOutputAudioMixerGroup : AudioCommand<AudioSource>, IAudioCommand<AudioMixerGroup>
     {
 
-        public AudioMixerGroup InitialValue { get; private set; }
-        public AudioMixerGroup FinalValue { get; private set; }
+        public AudioMixerGroup InitialValue { get;  set; }
+        public AudioMixerGroup FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -464,8 +473,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioSourceCmdLoop : AudioCommand<AudioSource>, IAudioCommand<bool>
     {
 
-        public bool InitialValue { get; private set; }
-        public bool FinalValue { get; private set; }
+        public bool InitialValue { get;  set; }
+        public bool FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -503,8 +512,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioSourceCmdIgnoreListenerVolume : AudioCommand<AudioSource>, IAudioCommand<bool>
     {
 
-        public bool InitialValue { get; private set; }
-        public bool FinalValue { get; private set; }
+        public bool InitialValue { get;  set; }
+        public bool FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -542,8 +551,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioSourceCmdPlayOnAwake : AudioCommand<AudioSource>, IAudioCommand<bool>
     {
 
-        public bool InitialValue { get; private set; }
-        public bool FinalValue { get; private set; }
+        public bool InitialValue { get;  set; }
+        public bool FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -581,8 +590,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioSourceCmdIgnoreListenerPause : AudioCommand<AudioSource>, IAudioCommand<bool>
     {
 
-        public bool InitialValue { get; private set; }
-        public bool FinalValue { get; private set; }
+        public bool InitialValue { get;  set; }
+        public bool FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -620,8 +629,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioSourceCmdVelocityUpdateMode : AudioCommand<AudioSource>, IAudioCommand<AudioVelocityUpdateMode>
     {
 
-        public AudioVelocityUpdateMode InitialValue { get; private set; }
-        public AudioVelocityUpdateMode FinalValue { get; private set; }
+        public AudioVelocityUpdateMode InitialValue { get; set; }
+        public AudioVelocityUpdateMode FinalValue { get;  set; }
         public CommandState CommandState { get; set; }
 
 
@@ -659,8 +668,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioSourceCmdPanStereo : AudioCommand<AudioSource>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get; set; }
+        public float FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -704,8 +713,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioSourceCmdSpatialBlend : AudioCommand<AudioSource>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get; set; }
+        public float FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -749,8 +758,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioSourceCmdSpatialize : AudioCommand<AudioSource>, IAudioCommand<bool>
     {
 
-        public bool InitialValue { get; private set; }
-        public bool FinalValue { get; private set; }
+        public bool InitialValue { get;  set; }
+        public bool FinalValue { get;  set; }
         public CommandState CommandState { get; set; }
 
 
@@ -788,8 +797,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioSourceCmdSpatializePostEffects : AudioCommand<AudioSource>, IAudioCommand<bool>
     {
 
-        public bool InitialValue { get; private set; }
-        public bool FinalValue { get; private set; }
+        public bool InitialValue { get;  set; }
+        public bool FinalValue { get;  set; }
         public CommandState CommandState { get; set; }
 
 
@@ -827,8 +836,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioSourceCmdReverbZoneMix : AudioCommand<AudioSource>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get;  set; }
+        public float FinalValue { get;  set; }
         public CommandState CommandState { get; set; }
 
 
@@ -872,8 +881,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioSourceCmdBypassEffects : AudioCommand<AudioSource>, IAudioCommand<bool>
     {
 
-        public bool InitialValue { get; private set; }
-        public bool FinalValue { get; private set; }
+        public bool InitialValue { get;  set; }
+        public bool FinalValue { get;  set; }
         public CommandState CommandState { get; set; }
 
 
@@ -911,8 +920,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioSourceCmdBypassListenerEffects : AudioCommand<AudioSource>, IAudioCommand<bool>
     {
 
-        public bool InitialValue { get; private set; }
-        public bool FinalValue { get; private set; }
+        public bool InitialValue { get;  set; }
+        public bool FinalValue { get;  set; }
         public CommandState CommandState { get; set; }
 
 
@@ -950,8 +959,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioSourceCmdBypassReverbZones : AudioCommand<AudioSource>, IAudioCommand<bool>
     {
 
-        public bool InitialValue { get; private set; }
-        public bool FinalValue { get; private set; }
+        public bool InitialValue { get;  set; }
+        public bool FinalValue { get;  set; }
         public CommandState CommandState { get; set; }
 
 
@@ -989,8 +998,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioSourceCmdDopplerLevel : AudioCommand<AudioSource>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get;  set; }
+        public float FinalValue { get;  set; }
         public CommandState CommandState { get; set; }
 
 
@@ -1034,8 +1043,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioSourceCmdSpread : AudioCommand<AudioSource>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get;  set; }
+        public float FinalValue { get;  set; }
         public CommandState CommandState { get; set; }
 
 
@@ -1079,8 +1088,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioSourceCmdPriority : AudioCommand<AudioSource>, IAudioCommand<int>
     {
 
-        public int InitialValue { get; private set; }
-        public int FinalValue { get; private set; }
+        public int InitialValue { get;  set; }
+        public int FinalValue { get;  set; }
         public CommandState CommandState { get; set; }
 
 
@@ -1124,8 +1133,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioSourceCmdMute : AudioCommand<AudioSource>, IAudioCommand<bool>
     {
 
-        public bool InitialValue { get; private set; }
-        public bool FinalValue { get; private set; }
+        public bool InitialValue { get;  set; }
+        public bool FinalValue { get;  set; }
         public CommandState CommandState { get; set; }
 
 
@@ -1163,8 +1172,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioSourceCmdMinDistance : AudioCommand<AudioSource>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get;  set; }
+        public float FinalValue { get;  set; }
         public CommandState CommandState { get; set; }
 
 
@@ -1208,8 +1217,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioSourceCmdMaxDistance : AudioCommand<AudioSource>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get;  set; }
+        public float FinalValue { get;  set; }
         public CommandState CommandState { get; set; }
 
 
@@ -1253,8 +1262,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioSourceCmdRolloffMode : AudioCommand<AudioSource>, IAudioCommand<AudioRolloffMode>
     {
 
-        public AudioRolloffMode InitialValue { get; private set; }
-        public AudioRolloffMode FinalValue { get; private set; }
+        public AudioRolloffMode InitialValue { get;  set; }
+        public AudioRolloffMode FinalValue { get;  set; }
         public CommandState CommandState { get; set; }
 
 
@@ -1292,8 +1301,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioSourceCmdEnabled : AudioCommand<AudioSource>, IAudioCommand<bool>
     {
 
-        public bool InitialValue { get; private set; }
-        public bool FinalValue { get; private set; }
+        public bool InitialValue { get;  set; }
+        public bool FinalValue { get;  set; }
         public CommandState CommandState { get; set; }
 
 

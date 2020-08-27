@@ -27,8 +27,9 @@ namespace Audiomata.ComponentTrackers
         private LimitedStack<AudioCommand<AudioLowPassFilter>> audioCommands;
         public AudioLowPassFilter Target { get; private set; }
 
-        public AudioLowPassFilterCommander()
+        public AudioLowPassFilterCommander(AudioLowPassFilter lowPassFilter)
         {
+            Target = lowPassFilter;
             audioCommands = new LimitedStack<AudioCommand<AudioLowPassFilter>>();
         }
 
@@ -36,6 +37,13 @@ namespace Audiomata.ComponentTrackers
         {
             AudioCommand<AudioLowPassFilter> newCommand = CommandFactory(enumeratedProp);
             newCommand.Do(value);
+            audioCommands.Push(newCommand);
+            return newCommand;
+        }
+
+        public AudioCommand<AudioLowPassFilter> CreateCommand(int enumeratedProp)
+        {
+            AudioCommand<AudioLowPassFilter> newCommand = CommandFactory(enumeratedProp);
             audioCommands.Push(newCommand);
             return newCommand;
         }
@@ -113,8 +121,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioLowPassFilterCmdCustomCutoffCurve : AudioCommand<AudioLowPassFilter>, IAudioCommand<AnimationCurve>
     {
 
-        public AnimationCurve InitialValue { get; private set; }
-        public AnimationCurve FinalValue { get; private set; }
+        public AnimationCurve InitialValue { get;  set; }
+        public AnimationCurve FinalValue { get;  set; }
         public CommandState CommandState { get; set; }
 
 
@@ -152,8 +160,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioLowPassFilterCmdCutoffFrequency : AudioCommand<AudioLowPassFilter>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get;  set; }
+        public float FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -197,8 +205,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioLowPassFilterCmdLowpassResonanceQ : AudioCommand<AudioLowPassFilter>, IAudioCommand<float>
     {
 
-        public float InitialValue { get; private set; }
-        public float FinalValue { get; private set; }
+        public float InitialValue { get;  set; }
+        public float FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 
@@ -242,8 +250,8 @@ namespace Audiomata.ComponentTrackers
     public class AudioLowPassFilterCmdEnabled : AudioCommand<AudioLowPassFilter>, IAudioCommand<bool>
     {
 
-        public bool InitialValue { get; private set; }
-        public bool FinalValue { get; private set; }
+        public bool InitialValue { get;  set; }
+        public bool FinalValue { get; set; }
         public CommandState CommandState { get; set; }
 
 

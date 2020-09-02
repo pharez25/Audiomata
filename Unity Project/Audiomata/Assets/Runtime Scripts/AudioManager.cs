@@ -10,7 +10,7 @@ namespace Audiomata
         [SerializeField]
         public AudioData[] relevantClips;
 
-        private string qTest = "!bird|B&!A";
+        private string qTest = "(bird&robin)|A";
 
         public static AudioManager Instance { get; private set; }
 
@@ -54,30 +54,12 @@ namespace Audiomata
             {
                 EffectManager = GetComponent<AudioEffectManager>();
             }
-            
             IsSetUp = true;
-            QueryManager.QueryAudio(qTest, out var results);
-            Debug.Log("Full Query Results: ");
-            foreach (var result in results)
-            {
-                Debug.Log(result);
-            }
-            Debug.Log("Results End");
-
-
-            EventManager.AddEventReference("test", TestEvent);            
         }
 
         private void Start()
         {
             EventManager.FireEvent("test", this, this);
-        }
-
-        private void TestEvent (object sender, Object target)
-        {
-            relevantClips = null;
-            AudioManager manager = (AudioManager)target;
-            manager.gameObject.transform.Rotate(45, 45, 45, Space.Self);
         }
 
         private void OnDestroy()

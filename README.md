@@ -47,11 +47,12 @@ The sound in this project is for demoing as it has been put together very quickl
 
 System Instructions (and Quirks):
 Essentially you:
--Give audio clips tags and search for them using c#-like syntax 
+-Give audio clips tags and search for them using C#-like syntax 
 -Make events that can modify any audio component
 - Use Unity's Snapshots as well if you feel like it
-- Reverse any effect on any system. Note that it will not be able to revert backwards so a clip being modified by a channel effect cannot be unmofied on the clip, you must unmodify the channel
+- Reverse any effect on any system. Note that it will not be able to revert backwards so a clip being modified by a channel effect cannot be unmodified on the clip, you must unmodify the channel
 - Query tags in game (really slow) or pre query the, out side (As fast as can be).
+- 
 
 The workflow is normally going to be like this:
 Add as many tracks as you like to assets.
@@ -64,17 +65,18 @@ Note that the operators go left to right. Queries can be any length, but they wi
 - nested brackets are good as well.
 - the tag must exist in the current instance to work, even with NOT.
 
-
 Tags have the following rules:
 - Cannot have spaces on either side nor double spaces in the middle (these are removed automatically).
 - Only numbers, letters, underscores and spaces are allowed.
 - can have any valid character from 1 length.
+- allowing spaces will likely be removed in future (they truly are awful to deal with genreally)
 
 Operations (Yup you can use Linq to add your own and it was not very nice to program but I made it easy for you : ) ):
 - the operations under the hood use lists of guids (basically ID strings for each track), 
 - Prefix only get parsed the rhs as they are meant for single tag set operations the same applies to brackets as they don't implicityl have another side
 - Postfix is for 2 tags and cannot be used in any other way but in between them
 - A group will do everything between it's start and it's end character, then it will perform it's own operation after wards and return.
-- Operation Prescedence goes groups>prefix>postfix and from right to left of the string.
+- Operation Prescedence goes groups>prefix>postfix and from right to left of the string. Right to left shouldn't affect results, but then again a lot of shouldn'ts can never be accounted for.
  you get parsed in by default the lhs (except for prefix) set of tags, the right hand side set of tags and the instance to the qm that called the operation
-- where an operation cannot be done or yields no results returning an empty list of strings is the most stable solution. **Null may cause a crash**.
+- where an operation cannot be done or yields no results returning an empty list of strings is the most stable solution. **Null may cause a crash** .
+- Finally You may completely overwrite the operation dictionary with your own one or, parse values to be added

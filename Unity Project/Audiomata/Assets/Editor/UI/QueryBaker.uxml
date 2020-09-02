@@ -1,0 +1,8 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <uie:ObjectField label="Target Clip Set" name="target" tooltip="Select a clip or set of clips" picking-mode="Ignore" allow-scene-objects="false" style="height: 23px; width: 372.6px;">
+        <Style src="QuerBakerStyles.uss" />
+    </uie:ObjectField>
+    <ui:TextField picking-mode="Ignore" label="Query To Apply" text="Example&amp;(!Example)" name="txtFieldQuery" multiline="true">
+        <Style src="QuerBakerStyles.uss" />
+    </ui:TextField>
+</ui:UXML>

@@ -179,6 +179,7 @@ namespace Audiomata
                 EditorUtility.DisplayDialog("Tag Already Added", "This tag is already on the selected clip", "OK");
                 return;
             }
+            EditorUtility.SetDirty(audioDataDict[clipSelection]);
             targetTags.Add(tag);
             RefreshTagList();
         }

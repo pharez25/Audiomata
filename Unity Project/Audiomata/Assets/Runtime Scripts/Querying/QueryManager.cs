@@ -234,7 +234,7 @@ namespace Audiomata
                 resultTarget = null;
                 return;
             }
-            Debug.Log("Started Query");
+
 
             IEnumerable<string> currentGuidSet = null;
             MatchCollection opMatches = opRegex.Matches(query);
@@ -532,8 +532,7 @@ namespace Audiomata
         private IEnumerable<string> OrLstSet(IEnumerable<string> guidSetLeft, IEnumerable<string> guidSetRight, QueryManager qm)
         {
             var outQ = guidSetLeft.Union(guidSetRight);
-            Debug.Log("OR Results");
-            DebugPrint(outQ);
+           
             return outQ;
         }
 
@@ -548,16 +547,14 @@ namespace Audiomata
         private IEnumerable<string> AndLstSet(IEnumerable<string> guidSetLeft, IEnumerable<string> guidSetRight, QueryManager qm)
         {
             var outQ = guidSetLeft.Intersect(guidSetRight);
-            Debug.Log("AND Results");
-            DebugPrint(outQ);
+          
             return outQ;
         }
 
         private IEnumerable<string> NotLstSet(IEnumerable<string> guidSetLeft, IEnumerable<string> guidSetRight, QueryManager qm)
         {
             IEnumerable<string> outQuery = qm.AllGuids.Except(guidSetRight); ;
-            Debug.Log("NOT Results");
-            DebugPrint(outQuery);
+         
             return outQuery;
         }
 
@@ -596,7 +593,7 @@ namespace Audiomata
 
             var outSet = guidSetRight.ToList();
 
-            Debug.Log("Out Results: ");
+            
             return outSet;
         }
 

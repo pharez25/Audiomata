@@ -159,12 +159,12 @@ namespace Audiomata
                 showAddableTracks = true;
             }
             GUILayout.Space(15);
-
+            /*
             if (GUILayout.Button("Generate Command Pattern References"))
             {
                 AudioMapGenerator.GenerateScripts();
             }
-
+            */
             serializedObject.ApplyModifiedProperties();
         }
 

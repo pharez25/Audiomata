@@ -38,7 +38,15 @@ Where the audio is not credited, it is my audio. The credits below are sources o
 - "geese chattering" - https://freesound.org/people/straget/sounds/424093/ by "straget"
 -"birds-01" - https://freesound.org/people/Anthousai/sounds/398736/ by "Anthousai"
 
-
+# For The Demo that will likely be removed:
+note that some may be retitled
+- City Ambience Exterior Cars Passing by [unedited].wav https://freesound.org/people/THPSounds/sounds/387313/ by "THPSounds"
+- "rain-moderate" - https://freesound.org/people/InspectorJ/sounds/401277/ by "InspectorJ"
+- "wind through trees" - https://freesound.org/people/spoonbender/sounds/244942/ by "spoonbender"
+- "forest" - https://freesound.org/people/klankbeeld/sounds/530415/ by "klankbeeId"
+- "seagulls" - https://freesound.org/people/juskiddink/sounds/98479/ by "justkiddink"
+- "street ambience" - https://freesound.org/people/kiefspoon/sounds/269405/ by "kiefspon"
+- "breaking-ice-01" - "https://freesound.org/people/dheming/sounds/268023/" by "dheming"
 
 
 # This software (only) upon publication (from when it is publically listed) on Github is under the CC0 1 Universal license, this means that copyright has been wavered and the software is free to use in virtually any ethical manner both commercial and non commercial without attribution. For more information [click here](https://creativecommons.org/publicdomain/zero/1.0/?ref=chooser-v1).

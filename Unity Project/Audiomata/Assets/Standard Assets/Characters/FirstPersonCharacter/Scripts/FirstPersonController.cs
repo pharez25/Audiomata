@@ -4,6 +4,7 @@ using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.Utility;
 using Random = UnityEngine.Random;
 
+
 #pragma warning disable 618, 649
 namespace UnityStandardAssets.Characters.FirstPerson
 {
@@ -42,6 +43,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private float m_NextStep;
         private bool m_Jumping;
         private AudioSource m_AudioSource;
+
+        public void UpdateFootStepSounds(AudioClip[] set)
+        {
+            m_FootstepSounds = set;
+        }
 
         // Use this for initialization
         private void Start()
